@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600" font-family="Noto Serif CJK KR" font-weight="900">
+  <g fill="none" stroke="#C8102E"><rect x="22" y="22" width="556" height="556" rx="14" stroke-width="14"/><rect x="52" y="52" width="496" height="496" rx="6" stroke-width="3"/></g>
+  <g fill="#C8102E" font-size="104" text-anchor="middle">
+    <text x="492" y="0"><tspan x="492" y="160">한</tspan><tspan x="492" y="270">국</tspan><tspan x="492" y="380">반</tspan><tspan x="492" y="490">려</tspan></text>
+    <text><tspan x="364" y="160">동</tspan><tspan x="364" y="270">물</tspan><tspan x="364" y="380">이</tspan><tspan x="364" y="490">동</tspan></text>
+    <text><tspan x="236" y="160">장</tspan><tspan x="236" y="270">례</tspan><tspan x="236" y="380">협</tspan><tspan x="236" y="490">회</tspan></text>
+    <text><tspan x="108" y="340">인</tspan></text>
+  </g>
+</svg>
