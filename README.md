@@ -18,7 +18,7 @@
 ## 올리기 전에 반드시 바꿀 것
 
 **1. 도메인**
-모든 HTML과 sitemap.xml, robots.txt에서 `https://www.kmpfa.or.kr` 을 실제 도메인으로 일괄 치환.
+모든 HTML과 sitemap.xml, robots.txt에서 `https://kmpfa.or.kr` 을 실제 도메인으로 일괄 치환.
 
 **2. 검색엔진 인증 코드**
 각 HTML `<head>` 안:
