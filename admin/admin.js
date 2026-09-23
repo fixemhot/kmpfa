@@ -15,7 +15,7 @@
 
   var $ = function (id) { return document.getElementById(id); };
   var state = {
-    token: '', posts: [], editing: null, pending: {}, bodyDirty: false, formDirty: false,
+    token: '', login: '', posts: [], editing: null, pending: {}, bodyDirty: false, formDirty: false,
     template: null, savedRange: null, draftTimer: null,
     recent: {} // 방금 올린 사진: 사이트 반영 전까지 편집기에서 보여줄 임시 주소
   };
@@ -89,8 +89,10 @@
     if (!res.ok) {
       var msg = '';
       try { msg = (await res.json()).message || ''; } catch (e) { /* 무시 */ }
-      var err = new Error(ghMessage(res.status, msg));
+      var step = (opts.method || 'GET') + ' ' + path.replace(repoPath(''), '').split('?')[0];
+      var err = new Error(ghMessage(res.status, msg) + (res.status >= 403 ? '\n[GitHub 응답 ' + res.status + ' · ' + step + (msg ? ' · ' + msg : '') + ']' : ''));
       err.status = res.status;
+      err.ghMsg = msg;
       throw err;
     }
     if (opts.raw) return res.text();
@@ -175,6 +177,7 @@
     busy('확인하는 중…');
     try {
       await gh(repoPath(''));
+      try { var me = await gh('/user'); state.login = me && me.login || ''; } catch (e) { state.login = ''; }
       var text;
       try { text = await getFile('news/posts.json'); } catch (e) {
         if (e.status === 404) throw new Error('저장소에 news/posts.json 파일이 없습니다. 소식 관리 설치 파일을 먼저 올려 주세요.');
@@ -221,7 +224,14 @@
     var tb = $('listBody');
     tb.textContent = '';
     var list = G.newestFirst(state.posts);
-    $('listInfo').textContent = '전체 ' + list.length + '건 · 게시하거나 고치면 1~3분 뒤 사이트에 반영됩니다.';
+    $('listInfo').textContent = '전체 ' + list.length + '건 · 게시하거나 고치면 1~3분 뒤 사이트에 반영됩니다.' +
+      (state.login ? ' · 열쇠: ' + state.login + ' 계정' : '');
+    var warn = $('ownerWarn');
+    if (state.login && state.login.toLowerCase() !== CFG.owner) {
+      warn.textContent = '지금 들어온 열쇠는 「' + state.login + '」 계정에서 만든 것입니다. 이 열쇠로는 글을 볼 수만 있고 저장할 수 없습니다. ' +
+        'GitHub에 「' + CFG.owner + '」 계정으로 로그인해서 열쇠를 다시 만든 뒤, 로그아웃하고 새 열쇠로 들어와 주세요.';
+      warn.hidden = false;
+    } else warn.hidden = true;
     if (!list.length) {
       var tr0 = document.createElement('tr');
       var td0 = cell(tr0, 'empty', '아직 글이 없습니다. 오른쪽 위 “새 글 쓰기”로 시작하세요.');
