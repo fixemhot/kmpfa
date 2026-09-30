@@ -193,7 +193,7 @@
       var deck = p.deck && p.deckInList ? ' <span style="color:#847C71;font-size:.9em">— ' + esc(p.deck) + '</span>' : '';
       var press = p.press && p.press.url
         ? '<a class="press-link" href="' + esc(p.press.url) + '" target="_blank" rel="noopener">' + esc(p.press.name || '원문') + ' ↗</a>'
-        : '<span class="press-wait">게재 준비 중</span>';
+        : '<span class="press-wait" title="언론 보도 없음">–</span>';
       return [
         '      <tr>',
         '        <td class="no">' + p.no + '</td>',
