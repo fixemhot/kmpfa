@@ -189,13 +189,17 @@
 
   /* ── 소식 게시판(news.html) ──────────────────────────── */
   function renderBoardRows(posts) {
-    var rows = newestFirst(posts).map(function (p) {
+    /* 공지는 날짜와 상관없이 목록 맨 위에 고정합니다 */
+    var all = newestFirst(posts);
+    var ordered = all.filter(function (p) { return p.category === '공지'; })
+      .concat(all.filter(function (p) { return p.category !== '공지'; }));
+    var rows = ordered.map(function (p) {
       var deck = p.deck && p.deckInList ? ' <span style="color:#847C71;font-size:.9em">— ' + esc(p.deck) + '</span>' : '';
       var press = p.press && p.press.url
         ? '<a class="press-link" href="' + esc(p.press.url) + '" target="_blank" rel="noopener">' + esc(p.press.name || '원문') + ' ↗</a>'
         : '<span class="press-wait" title="언론 보도 없음">–</span>';
       return [
-        '      <tr>',
+        p.category === '공지' ? '      <tr style="background:#FAF8F3">' : '      <tr>',
         '        <td class="no">' + p.no + '</td>',
         '        <td class="cat">' + badge(p.category) + '</td>',
         '        <td class="tit"><a href="news/' + p.slug + '.html">' + esc(p.title) + deck + '</a></td>',
