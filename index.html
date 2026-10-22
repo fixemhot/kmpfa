@@ -301,13 +301,18 @@ footer a:hover{color:#2A2724}
 <script>
 (function(){
   fetch('news/posts.json').then(function(r){return r.json()}).then(function(d){
-    var ps=(d.posts||[]).filter(function(p){return p.image}).sort(function(a,b){return (b.date||'').localeCompare(a.date||'')||b.no-a.no}).slice(0,12);
-    if(ps.length<3) return;
+    var ps=(d.posts||[]).filter(function(p){return p.image}).sort(function(a,b){return (b.date||'').localeCompare(a.date||'')||b.no-a.no});
     var esc=function(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;')};
-    var h=ps.map(function(p){var badge=p.press&&p.press.url?('언론 보도 · '+(p.press.name||'기사')):p.category;
-      return '<a class="gcard" href="news/'+p.slug+'.html"><img src="'+esc(p.image)+'" alt="" width="'+(p.imageWidth||1600)+'" height="'+(p.imageHeight||900)+'" loading="lazy"><span class="gb">'+esc(badge)+'</span><span class="gt">'+esc(p.title)+'</span></a>'}).join('');
+    var cards=[];
+    ps.forEach(function(p){var badge=p.press&&p.press.url?('언론 보도 · '+(p.press.name||'기사')):p.category;
+      var seen={}; var items=[{src:p.image,cap:p.title}];
+      try{var doc=new DOMParser().parseFromString('<div>'+(p.body||'')+'</div>','text/html');
+        doc.querySelectorAll('img').forEach(function(im){var s=(im.getAttribute('src')||'').replace(/^\.\.\//,''); if(!/^images\//.test(s)||s===p.image||seen[s]) return; seen[s]=1;
+          var fc=im.parentElement&&im.parentElement.querySelector('figcaption'); items.push({src:s,cap:fc?fc.textContent:p.title});});}catch(e){}
+      items.slice(0,6).forEach(function(it){cards.push('<a class="gcard" href="news/'+p.slug+'.html"><img src="'+esc(it.src)+'" alt="" width="1600" height="1068" loading="lazy"><span class="gb">'+esc(badge)+'</span><span class="gt">'+esc(it.cap)+'</span></a>');});});
+    cards=cards.slice(0,20); if(cards.length<3) return; var h=cards.join('');
     var sets=document.querySelectorAll('#gal .gset'); sets[0].innerHTML=h; sets[1].innerHTML=h;
-    document.querySelector('#gal .gtr').style.animationDuration=Math.max(40,ps.length*9)+'s';
+    document.querySelector('#gal .gtr').style.animationDuration=Math.max(40,cards.length*7)+'s';
   }).catch(function(){});
 })();
 </script>
