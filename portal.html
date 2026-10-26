@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
+<title>이동장례 통합창구 (시연) | 한국반려동물이동장례협회</title>
+<meta content="화장 완료 후 보호자 동의·전자서명, 장례확인서 발급, 관할 구청 통보, 동물등록 변경신고 안내까지 한 흐름으로 잇는 협회 통합 관리 시스템 시연 화면" name="description"/>
+<meta content="noindex,nofollow" name="robots"/>
+<link href="images/favicon.svg" rel="icon" type="image/svg+xml"/>
+</head>
+<body style="margin:0">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@600&display=swap">
+<style>
+/* 레이아웃: 상단 고정 탭(보호자/운영자) + 한 열 카드 흐름, 폰 폭 기준 설계. 상태는 핀(pill)으로, 숫자는 tabular */
+:root{
+  --bg:#FFFFFF; --fg:#2A2724; --mute:#6F675E; --line:#E4DED4; --panel:#F7F4EE; --panel2:#EFE9DF;
+  --accent:#7A6247; --accent-fg:#FFFFFF; --accent-soft:#F1EAE0;
+  --ok:#3E6B4B; --ok-soft:#E6EFE7; --warn:#9A6A1B; --warn-soft:#F7EEDC; --bad:#8B2E1F;
+  --display:"Noto Serif KR","Noto Sans KR",serif; --body:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif; --mono:"SFMono-Regular",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --bg:#17150F; --fg:#EDE7DC; --mute:#A89F91; --line:#352F26; --panel:#211E17; --panel2:#2A261E; --accent:#C7A77E; --accent-fg:#1A1610; --accent-soft:#2E2820; --ok:#8FC39A; --ok-soft:#1F2E22; --warn:#E0B462; --warn-soft:#30281A; --bad:#E08A7A; color-scheme:dark } }
+:root[data-theme="dark"]{ --bg:#17150F; --fg:#EDE7DC; --mute:#A89F91; --line:#352F26; --panel:#211E17; --panel2:#2A261E; --accent:#C7A77E; --accent-fg:#1A1610; --accent-soft:#2E2820; --ok:#8FC39A; --ok-soft:#1F2E22; --warn:#E0B462; --warn-soft:#30281A; --bad:#E08A7A; color-scheme:dark }
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+.stack{display:grid;gap:14px}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.55;margin:0}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--bg);border-bottom:1px solid var(--line)}
+.top .in{max-width:720px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand .mark{width:34px;height:34px;border-radius:50%;background:var(--accent);color:var(--accent-fg);display:grid;place-items:center;font-family:var(--display);font-weight:600;font-size:14px;flex:none}
+.brand b{display:block;font-size:14px;line-height:1.2}
+.brand small{display:block;color:var(--mute);font-size:11.5px;line-height:1.3}
+.tabs{display:flex;gap:4px;background:var(--panel);padding:3px;border-radius:999px}
+.tabs button{border:0;background:transparent;color:var(--mute);font:inherit;font-size:13px;font-weight:500;padding:6px 12px;border-radius:999px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-fg)}
+.tabs button:focus-visible,button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{max-width:720px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 40px;display:grid;gap:14px}
+.demo{font-size:12px;color:var(--mute);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.demo i{font-style:normal;background:var(--warn-soft);color:var(--warn);padding:2px 8px;border-radius:999px;font-weight:500}
+.card{border:1px solid var(--line);border-radius:14px;padding:16px;background:var(--bg);display:grid;gap:12px;min-width:0}
+.card.tint{background:var(--panel);border-color:transparent}
+.hd{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.hd h2{margin:0;font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
+.step{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--accent-fg);font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+.pill{font-size:12px;font-weight:500;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.warn{background:var(--warn-soft);color:var(--warn)} .pill.mute{background:var(--panel2);color:var(--mute)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.f label{display:block;font-size:11.5px;color:var(--mute);margin-bottom:4px;letter-spacing:.02em}
+.f .v{border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:var(--panel);font-variant-numeric:tabular-nums;min-width:0;word-break:break-all}
+.f input{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:var(--bg);color:var(--fg);font:inherit;font-variant-numeric:tabular-nums}
+.row{display:flex;gap:8px;align-items:stretch}
+.row input{flex:1;min-width:0}
+.btn{border:1px solid var(--accent);background:var(--accent);color:var(--accent-fg);font:inherit;font-weight:700;padding:11px 16px;border-radius:12px;cursor:pointer}
+.btn.sec{background:transparent;color:var(--accent)}
+.btn.sm{padding:8px 12px;font-size:13px;font-weight:500;white-space:nowrap}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.api{font-size:13px;background:var(--panel);border-radius:10px;padding:10px 12px;display:grid;gap:4px}
+.api .k{color:var(--mute)} .api code{font-family:var(--mono);font-size:12px}
+.consent{display:grid;gap:8px}
+.consent label{display:grid;grid-template-columns:22px 1fr;gap:10px;align-items:start;padding:10px 12px;border:1px solid var(--line);border-radius:12px;cursor:pointer}
+.consent label.all{background:var(--panel);font-weight:700;border-color:transparent}
+.consent input{width:18px;height:18px;margin:3px 0 0;accent-color:var(--accent)}
+.consent b{display:block;font-size:14px} .consent small{display:block;color:var(--mute);font-size:12.5px;line-height:1.45;margin-top:2px}
+.law{font-size:11.5px;color:var(--accent);font-weight:500}
+.sig{border:1.5px dashed var(--line);border-radius:12px;background:var(--panel);position:relative;overflow:hidden}
+.sig canvas{display:block;width:100%;height:150px;touch-action:none}
+.sig .hint{position:absolute;inset:0;display:grid;place-items:center;color:var(--mute);font-size:13px;pointer-events:none}
+.sig.has .hint{display:none}
+.sigbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.err{color:var(--bad);font-size:13px;font-weight:500}
+.cert{border:1px solid var(--line);border-radius:14px;padding:18px 16px;background:var(--bg);display:grid;gap:12px}
+.cert h3{margin:0;font-family:var(--display);font-size:20px;text-align:center;letter-spacing:.08em}
+.cert .no{text-align:center;color:var(--mute);font-size:12px;font-variant-numeric:tabular-nums}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:14px}
+.kv dt{color:var(--mute);margin:0} .kv dd{margin:0;font-variant-numeric:tabular-nums;min-width:0;word-break:keep-all}
+.cert .stamp{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:12px;font-size:13px}
+.cert .stamp img{height:44px;max-width:160px;object-fit:contain}
+.seal{width:60px;height:60px;border-radius:50%;border:2px solid var(--bad);color:var(--bad);display:grid;place-items:center;font-family:var(--display);font-size:13px;text-align:center;line-height:1.1;transform:rotate(-8deg);flex:none}
+.next{display:grid;gap:10px}
+.next a,.next .nb{display:flex;align-items:center;justify-content:space-between;gap:10px;text-decoration:none;color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.next a span,.next .nb span{display:block} .next small{color:var(--mute);font-size:12.5px}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:640px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap;font-variant-numeric:tabular-nums}
+th{font-size:11.5px;color:var(--mute);font-weight:500;letter-spacing:.03em}
+td.mono{font-family:var(--mono);font-size:12px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.stat{background:var(--panel);border-radius:12px;padding:12px 14px}
+.stat b{display:block;font-size:26px;font-variant-numeric:tabular-nums;line-height:1.1;font-family:var(--display);font-weight:600}
+.stat small{color:var(--mute);font-size:12px}
+.notice{border:1px solid var(--line);border-radius:14px;padding:16px;display:grid;gap:10px;font-size:14px;background:var(--bg)}
+.notice h3{margin:0;text-align:center;font-family:var(--display);font-size:18px;letter-spacing:.06em}
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.flow div{background:var(--panel);border-radius:10px;padding:10px 12px;font-size:13px}
+.flow b{display:block;font-size:12px;color:var(--accent);margin-bottom:2px}
+.foot{font-size:12px;color:var(--mute);line-height:1.6}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:13px;z-index:20;max-width:calc(100% - 32px)}
+@media (prefers-reduced-motion:no-preference){.card,.cert{transition:opacity .25s}}
+</style>
+
+<header class="top"><div class="in">
+  <a class="brand" href="index.html" style="text-decoration:none;color:inherit"><div class="mark">K</div><div><b>이동장례 통합창구</b><small>장례확인서 · 지자체 통보 · 동물등록 변경신고 안내</small></div></a>
+  <div class="tabs" role="tablist">
+    <button role="tab" id="t-owner" aria-selected="true" data-view="owner">보호자</button>
+    <button role="tab" id="t-op" aria-selected="false" data-view="operator">운영자 · 통보</button>
+    <button role="tab" id="t-how" aria-selected="false" data-view="how">구조</button>
+  </div>
+</div></header>
+
+<main>
+<p class="demo"><i>시연용</i> 입력한 내용은 어디에도 저장되지 않습니다. 등록번호·이름 등은 예시입니다.</p>
+
+<!-- ───── 보호자 화면 ───── -->
+<section id="v-owner" class="card tint stack">
+  <div class="card">
+    <div class="hd"><h2><span class="step">1</span>동물등록 정보 확인</h2><span class="pill ok">리더기 스캔 완료</span></div>
+    <div class="grid">
+      <div class="f"><label for="reg">동물등록번호 (15자리) 또는 RFID</label><div class="row"><input id="reg" value="410100012345678" inputmode="numeric" maxlength="15"><button class="btn sm" id="btn-api" type="button">조회</button></div></div>
+      <div class="f"><label for="own">소유자 성명</label><input id="own" value="홍길동"></div>
+    </div>
+    <div class="api" id="api-box" hidden>
+      <span class="k">농림축산검역본부 동물등록 정보조회 서비스 응답 <code>animalInfo_v3</code> (예시)</span>
+      <span>동물이름 <b>초코</b> · 품종 말티즈 · 암컷 · 2015-03-10 생 · 중성화 Y</span>
+      <span>식별장치 내장(Y) · 관할기관 <b>서울특별시 양천구</b> · 등록일 2015-06-02</span>
+    </div>
+    <div class="grid">
+      <div class="f"><label>화장 일시</label><div class="v" id="when">2026-10-26 14:20</div></div>
+      <div class="f"><label>작업 장소 (구 지정)</label><div class="v">양천구 지정 작업장소 A (공영차고지)</div></div>
+      <div class="f"><label>실측 체중 · 처리 방법</label><div class="v">4.2 kg · 개별 화장</div></div>
+      <div class="f"><label>운영자 (동물장묘업 허가)</label><div class="v">○○이동장례 (양천구 허가 제2027-01호)</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="hd"><h2><span class="step">2</span>동의</h2></div>
+    <div class="consent">
+      <label class="all"><input type="checkbox" id="c-all"><span>아래 네 가지에 모두 동의합니다</span></label>
+      <label><input type="checkbox" class="c" id="c1"><span><b>장례확인서 발급</b><small>동물보호법 시행규칙 별표 12 제2호 라목 2)에 따라 장례확인서를 발급받습니다.</small><span class="law">별표 12 라-2)</span></span></label>
+      <label><input type="checkbox" class="c" id="c2"><span><b>관할 구청에 사체 처리 내역 통보</b><small>운영자가 처리 후 30일 이내에 허가번호·처리일자·동물등록번호·처리방법을 시설 관할 구청장에게 통보합니다.</small><span class="law">별표 12 라-3)</span></span></label>
+      <label><input type="checkbox" class="c" id="c3"><span><b>동물등록 변경신고(사망) 절차 안내 확인</b><small>소유자는 사망일부터 30일 이내에 변경신고를 해야 합니다. 신고 방법을 안내받았습니다.</small><span class="law">동물보호법 제15조 · 별표 12 라-7)</span></span></label>
+      <label><input type="checkbox" class="c" id="c4"><span><b>개인정보 수집·이용 및 관할 구청 제공</b><small>항목: 성명, 연락처, 동물등록번호. 목적: 장례확인서 발급과 법정 통보. 보유: 통보 완료 후 협회 처리방침의 기간까지.</small><span class="law">개인정보 보호법 제15조 · 제17조</span></span></label>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="hd"><h2><span class="step">3</span>보호자 서명</h2><button class="btn sm sec" type="button" id="btn-clear">지우기</button></div>
+    <div class="sig" id="sigwrap"><canvas id="sig" aria-label="서명란"></canvas><div class="hint">손가락이나 마우스로 서명해 주세요</div></div>
+    <p class="err" id="err" hidden></p>
+    <button class="btn" type="button" id="btn-submit">서명 완료 · 장례확인서 발급</button>
+  </div>
+
+  <div id="done" hidden class="stack">
+    <div class="cert" id="cert">
+      <h3>장 례 확 인 서</h3>
+      <div class="no">발급번호 KMPFA-2026-1026-001</div>
+      <dl class="kv">
+        <dt>동물 이름</dt><dd>초코 (말티즈, 4.2 kg)</dd>
+        <dt>동물등록번호</dt><dd id="cert-reg">410100012345678</dd>
+        <dt>소유자</dt><dd id="cert-own">홍길동</dd>
+        <dt>장례 방법</dt><dd>화장 (자동차를 이용한 화장시설)</dd>
+        <dt>장례 일시</dt><dd>2026년 10월 26일 14:20</dd>
+        <dt>장소</dt><dd>양천구 지정 작업장소 A</dd>
+        <dt>업소명 · 허가번호</dt><dd>○○이동장례 · 양천구 제2027-01호</dd>
+      </dl>
+      <p style="margin:0;font-size:13.5px;text-align:center">위 동물은 2026. 10. 26. 자동차를 이용한 화장시설에서 장례(화장)를 진행하였음을 확인합니다.</p>
+      <div class="stamp"><div><small style="color:var(--mute)">소유자 서명</small><br><img id="sig-img" alt="보호자 서명"></div><div class="seal">○○이동<br>장례 인</div></div>
+    </div>
+    <div class="card">
+      <div class="hd"><h2>다음 단계</h2></div>
+      <div class="next">
+        <div class="nb"><span><b>구청 통보 접수</b><small>양천구청 동물보호 담당 부서로 30일 이내 통보 (운영자 대장에 등록됨)</small></span><span class="pill warn">통보 대기 D-30</span></div>
+        <a href="https://www.animal.go.kr" target="_blank" rel="noopener"><span><b>동물등록 변경신고(사망) 하러 가기</b><small>국가동물보호정보시스템 animal.go.kr · 정부24에서도 가능 · 사망일부터 30일 이내</small></span><span class="pill mute">새 창</span></a>
+        <div class="nb"><span><b>장례확인서 보관</b><small>위 확인서는 알림톡 링크로 다시 열 수 있습니다 (시연에서는 화면 표시만)</small></span><span class="pill ok">발급 완료</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ───── 운영자 화면 ───── -->
+<section id="v-operator" hidden class="stack">
+  <div class="stats">
+    <div class="stat"><b>12</b><small>이번 달 처리 (양천구)</small></div>
+    <div class="stat"><b>12</b><small>보호자 전자동의 완료</small></div>
+    <div class="stat"><b>9</b><small>구청 통보 완료</small></div>
+    <div class="stat"><b>3</b><small>통보 대기 (30일 이내)</small></div>
+  </div>
+  <div class="card">
+    <div class="hd"><h2>사체 처리 내역 대장 · 양천구청 통보</h2><button class="btn sm" type="button" id="btn-notice">통보서 만들기 (대기 3건)</button></div>
+    <p class="foot" style="margin:0">시행규칙 별표 12 라-3): 등록대상동물 사체 처리 후 30일 이내, 시설 관할 구청장에게 허가번호·업소명·전화, 처리일자, 동물등록번호, 처리방법 통보. 통보 명의는 허가를 받은 운영자입니다.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>확인서 번호</th><th>처리일자</th><th>동물등록번호</th><th>동물 (체중)</th><th>처리방법</th><th>보호자 동의</th><th>통보</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">2026-1026-001</td><td>2026-10-26</td><td class="mono">410100012345678</td><td>초코 (4.2 kg)</td><td>화장</td><td><span class="pill ok">서명 완료</span></td><td><span class="pill warn">대기 D-30</span></td></tr>
+        <tr><td class="mono">2026-1025-004</td><td>2026-10-25</td><td class="mono">410100098765432</td><td>보리 (8.1 kg)</td><td>화장</td><td><span class="pill ok">서명 완료</span></td><td><span class="pill warn">대기 D-29</span></td></tr>
+        <tr><td class="mono">2026-1025-003</td><td>2026-10-25</td><td class="mono">410100055512345</td><td>콩이 (3.0 kg)</td><td>화장</td><td><span class="pill ok">서명 완료</span></td><td><span class="pill warn">대기 D-29</span></td></tr>
+        <tr><td class="mono">2026-1024-002</td><td>2026-10-24</td><td class="mono">410100031177889</td><td>뭉치 (18.5 kg)</td><td>화장</td><td><span class="pill ok">서명 완료</span></td><td><span class="pill ok">완료 10-24</span></td></tr>
+        <tr><td class="mono">2026-1023-001</td><td>2026-10-23</td><td class="mono">—</td><td>미등록 (6.0 kg)</td><td>화장</td><td><span class="pill ok">서명 완료</span></td><td><span class="pill mute">대상 아님</span></td></tr>
+      </tbody>
+    </table></div>
+  </div>
+  <div class="notice" id="notice" hidden>
+    <h3>등록대상동물 사체 처리 내역 통보서</h3>
+    <dl class="kv">
+      <dt>수신</dt><dd>양천구청장 (동물보호 담당 부서)</dd>
+      <dt>업소명</dt><dd>○○이동장례</dd>
+      <dt>허가번호 · 전화</dt><dd>양천구 제2027-01호 · 02-000-0000</dd>
+      <dt>통보일</dt><dd>2026-10-26</dd>
+    </dl>
+    <div class="tbl"><table style="min-width:420px">
+      <thead><tr><th>순번</th><th>처리일자</th><th>동물등록번호</th><th>처리방법</th></tr></thead>
+      <tbody><tr><td>1</td><td>2026-10-25</td><td class="mono">410100055512345</td><td>화장</td></tr><tr><td>2</td><td>2026-10-25</td><td class="mono">410100098765432</td><td>화장</td></tr><tr><td>3</td><td>2026-10-26</td><td class="mono">410100012345678</td><td>화장</td></tr></tbody>
+    </table></div>
+    <p class="foot" style="margin:0">위 내용을 동물보호법 시행규칙 별표 12 제2호 라목 3)에 따라 통보합니다. 실서비스에서는 구청 담당자 이메일로 PDF가 발송되고 대장의 상태가 "완료"로 바뀝니다.</p>
+  </div>
+</section>
+
+<!-- ───── 구조 설명 ───── -->
+<section id="v-how" hidden class="stack">
+  <div class="card">
+    <div class="hd"><h2>한 번에 이어지는 흐름</h2></div>
+    <div class="flow">
+      <div><b>현장</b>리더기로 칩 스캔 → 조회 API로 동물·관할기관 확인</div>
+      <div><b>보호자</b>알림톡 링크 → 동의 4건 · 전자서명</div>
+      <div><b>즉시</b>장례확인서 발급 (별표 12 라-2)</div>
+      <div><b>30일 이내</b>운영자 명의 통보서 → 시설 관할 구청 (라-3)</div>
+      <div><b>보호자</b>변경신고(사망) 안내 (라-7) → animal.go.kr</div>
+      <div><b>2단계</b>디지털서비스개방 파트너 → 우리 화면에서 사망 신고 완료</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="hd"><h2>무엇이 공공데이터로 열려 있나</h2></div>
+    <dl class="kv">
+      <dt>조회</dt><dd>농림축산검역본부 「동물등록 정보조회 서비스」 (공공데이터포털, 무료·자동승인·실시간). 등록번호 또는 RFID + 소유자 성명 또는 생년월일 → 이름·품종·관할기관·등록일시</dd>
+      <dt>변경신고</dt><dd>행정안전부 「디지털서비스개방 · 반려동물 정보관리」에 등록동물 조회와 변경신고(죽음 포함)가 민간 앱 개방 대상으로 올라 있음. 파트너 신청 조건은 행안부 확인 필요</dd>
+      <dt>통보</dt><dd>API 없음. 통보서 PDF를 구청 담당자 이메일로 발송하고 대장에 기록</dd>
+    </dl>
+  </div>
+  <div class="card">
+    <div class="hd"><h2>구청에 말할 수 있는 것</h2></div>
+    <p style="margin:0">화장 현장에서 보호자 동의와 통보서가 바로 만들어지므로, 공공 차량으로 처리한 등록동물은 100% 구청에 통보되고 보호자에게 변경신고가 안내됩니다. 등록은 있는데 말소가 없는 동물등록 DB의 공백을 공공 서비스가 메울 수 있습니다.</p>
+  </div>
+  <p class="foot">한국반려동물이동장례협회 · 시연용 화면 · 2026. 10. 26. 법령 인용은 동물보호법 시행규칙 별표 12(2024. 5. 27. 개정) 기준. 자동차를 이용한 화장시설은 2026. 10. 19. 입법예고안 기준.</p>
+</section>
+</main>
+
+<script>
+(function(){
+  var views={owner:'v-owner',operator:'v-operator',how:'v-how'};
+  function show(v){ if(!views[v]) v='owner'; Object.keys(views).forEach(function(k){document.getElementById(views[k]).hidden=(k!==v);}); document.querySelectorAll('.tabs [role=tab]').forEach(function(b){b.setAttribute('aria-selected',b.dataset.view===v?'true':'false');}); window.scrollTo({top:0}); }
+  document.querySelectorAll('.tabs [role=tab]').forEach(function(b){b.addEventListener('click',function(){show(b.dataset.view);});});
+  show((location.hash||'').replace('#','')||'owner');
+
+  // 조회 API 시연
+  document.getElementById('btn-api').addEventListener('click',function(){ var r=document.getElementById('reg').value.replace(/\D/g,''); var e=document.getElementById('err'); if(r.length!==15){ toast('동물등록번호는 숫자 15자리입니다'); return;} document.getElementById('api-box').hidden=false; document.getElementById('cert-reg').textContent=r; toast('조회 응답 예시를 표시했습니다'); });
+
+  // 동의
+  var all=document.getElementById('c-all'), subs=Array.prototype.slice.call(document.querySelectorAll('.c'));
+  all.addEventListener('change',function(){subs.forEach(function(c){c.checked=all.checked;});});
+  subs.forEach(function(c){c.addEventListener('change',function(){all.checked=subs.every(function(x){return x.checked;});});});
+
+  // 서명
+  var cv=document.getElementById('sig'), wrap=document.getElementById('sigwrap'), ctx=cv.getContext('2d'), drawing=false, has=false, dpr=Math.max(1,window.devicePixelRatio||1);
+  function size(){ var r=cv.getBoundingClientRect(); var img=has?cv.toDataURL():null; cv.width=Math.round(r.width*dpr); cv.height=Math.round(r.height*dpr); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.lineWidth=2.2; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--fg').trim()||'#222'; if(img){ var im=new Image(); im.onload=function(){ctx.drawImage(im,0,0,r.width,r.height);}; im.src=img; } }
+  size(); window.addEventListener('resize',size);
+  function pos(e){ var r=cv.getBoundingClientRect(); var p=e.touches?e.touches[0]:e; return {x:p.clientX-r.left,y:p.clientY-r.top}; }
+  function down(e){ e.preventDefault(); drawing=true; has=true; wrap.classList.add('has'); var p=pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); }
+  function move(e){ if(!drawing) return; e.preventDefault(); var p=pos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); }
+  function up(){ drawing=false; }
+  cv.addEventListener('mousedown',down); cv.addEventListener('mousemove',move); window.addEventListener('mouseup',up);
+  cv.addEventListener('touchstart',down,{passive:false}); cv.addEventListener('touchmove',move,{passive:false}); window.addEventListener('touchend',up);
+  document.getElementById('btn-clear').addEventListener('click',function(){ ctx.clearRect(0,0,cv.width,cv.height); has=false; wrap.classList.remove('has'); });
+
+  document.getElementById('btn-submit').addEventListener('click',function(){
+    var e=document.getElementById('err');
+    if(!subs.every(function(x){return x.checked;})){ e.textContent='네 가지 동의에 모두 체크해 주세요.'; e.hidden=false; return; }
+    if(!has){ e.textContent='서명란에 서명해 주세요.'; e.hidden=false; return; }
+    e.hidden=true;
+    document.getElementById('cert-own').textContent=document.getElementById('own').value||'소유자';
+    document.getElementById('sig-img').src=cv.toDataURL('image/png');
+    var d=document.getElementById('done'); d.hidden=false; d.scrollIntoView({behavior:'smooth',block:'start'});
+    toast('장례확인서를 발급했습니다 (시연)');
+  });
+
+  document.getElementById('btn-notice').addEventListener('click',function(){ var n=document.getElementById('notice'); n.hidden=false; n.scrollIntoView({behavior:'smooth',block:'start'}); });
+
+  var tm; function toast(m){ var t=document.querySelector('.toast'); if(!t){ t=document.createElement('div'); t.className='toast'; document.body.appendChild(t);} t.textContent=m; t.hidden=false; clearTimeout(tm); tm=setTimeout(function(){t.hidden=true;},2200); }
+})();
+</script>
+
+</body>
+</html>
