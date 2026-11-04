@@ -337,6 +337,36 @@
   .owl{font-size:11.5px;color:#4A4A44;line-height:1.8;}
   .owl .owt{display:inline-block;font-weight:800;color:#1C2A27;background:#EFEDE4;border-radius:6px;padding:1px 7px;margin-right:7px;font-size:10.5px;}
   .owl b{font-weight:700;color:#8A6A1E;margin-right:3px;}
+  .ko{font-family:inherit;color:#2A2724;}
+  .ko-h{font-size:15px;font-weight:800;margin-bottom:12px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;}
+  .ko-h span{font-size:11px;font-weight:500;color:#8A8278;}
+  .ko .kcol{width:62%;margin:0 auto;display:flex;flex-direction:column;align-items:stretch;}
+  .ko .kb{border:1.5px solid #7A6247;border-radius:10px;background:#fff;text-align:center;padding:8px 6px 9px;}
+  .ko .kb.gen{background:#F5F2EB;}
+  .ko .kb.top{background:#7A6247;}.ko .kb.top .kr{color:#F3E9DA;}
+  .ko .kb.top .kp{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.28);}.ko .kb.top .kp b{color:#fff;}
+  .ko .kr{font-size:11.5px;font-weight:800;color:#7A6247;letter-spacing:.06em;margin-bottom:5px;}
+  .ko .kn{font-size:14px;font-weight:800;}
+  .ko .kps{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;}
+  .ko .kp{display:inline-flex;align-items:center;gap:3px;background:#F5F2EB;border:1px solid #E2DCD0;border-radius:999px;padding:5px 9px;text-decoration:none;color:#2A2724;line-height:1.1;-webkit-tap-highlight-color:rgba(122,98,71,.25);}
+  .ko .kp:active{transform:scale(.96);background:#EDE4D6;}
+  .ko .kp b{font-size:13.5px;font-weight:800;}
+  .ko .kp i{font-style:normal;font-size:10px;font-weight:700;color:#7A6247;}
+  .ko .kp .kc{font-size:10.5px;margin-left:1px;}
+  .ko .kp.nop{opacity:.6;}
+  .ko .kem{font-size:12px;color:#9A9288;}
+  .ko .kv{width:2px;height:12px;background:#7A6247;margin:0 auto;}
+  .ko .kmid{position:relative;padding:12px 0;}
+  .ko .kmid .kvl{position:absolute;left:calc(50% - 1px);top:0;bottom:0;width:2px;background:#7A6247;}
+  .ko .kmid .khl{position:absolute;left:50%;width:12%;top:50%;border-top:2px dashed #7A6247;}
+  .ko .kb.aud{margin-left:62%;border-style:double;border-width:4px;padding:6px 4px 7px;position:relative;}
+  .ko .kb.aud .kp{padding:5px 7px;}
+  .ko .khub{border:2px solid #7A6247;border-radius:14px;background:#F5F2EB;padding:12px 10px 12px;position:relative;}
+  .ko .klbl{font-size:16px;font-weight:800;color:#5E4A34;letter-spacing:.25em;margin:0 0 6px 2px;}
+  .ko .kts{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:8px;margin-top:12px;}
+  .ko .kt{background:#fff;border:1px solid #DCD4C6;border-radius:10px;padding:8px 6px 9px;display:flex;flex-direction:column;gap:5px;align-items:stretch;text-align:center;}
+  .ko .kt .kp{justify-content:center;border-radius:8px;}
+  .ko .ktn{font-size:13px;font-weight:800;color:#5E4A34;margin-bottom:1px;}
   .fbtn{border:1px solid #D8D5C8;background:#F4F3EE;border-radius:8px;padding:6px 10px;font-size:11.5px;font-weight:700;color:#1C2A27;cursor:pointer;font-family:inherit;text-decoration:none;white-space:nowrap;}
   .fbtn.up{background:#2A2724;color:#fff;border-color:#2A2724;}
   .fbtn.warn{color:#9A3327;}
@@ -415,6 +445,7 @@
     <div class="hm-card" id="hmField" style="display:none"><div style="font-size:15px;font-weight:800;color:#2A2724">🛠️ 현장 관리</div><div style="font-size:12.5px;color:#6A6A72;margin:4px 0 10px;line-height:1.5">업무 지시 · 점검 일지 · 고장 접수 · 법정 안전검사</div><button class="mini" id="hmFieldGo">현장 관리 열기 ›</button></div>
     <div class="hm-card" id="hmSig"></div>
     <div class="hm-card" id="hmInfo"></div>
+    <div class="hm-card" id="hmOrg" style="display:none"></div>
     <div class="hm-card" id="hmRoster"></div>
     <button class="mini" id="hmLogout" style="color:#9A3327;margin-bottom:20px">로그아웃</button>
   </div>
@@ -1689,29 +1720,44 @@
     el.innerHTML=orgChartHtml(act);
   }
   function orgChartHtml(act){
-    var by={};act.forEach(function(x){var t=x.team||"기타";(by[t]=by[t]||[]).push(x);});
-    var rk=function(r){r=String(r||"");return /임원|대표|회장|이사|감사|사무국장/.test(r)?5:(/과장|팀장|대장|감독/.test(r)?4:(/대리|반장/.test(r)?3:(/주임/.test(r)?2:1)));};
-    Object.keys(by).forEach(function(t){by[t].sort(function(a,b){return rk(b.role)-rk(a.role)||(Number(b.total)||0)-(Number(a.total)||0)||String(a.name).localeCompare(String(b.name),"ko");});});
-    function box(x){return '<div class="ob"><div class="ob-r">'+esc(x.role||"&nbsp;")+'</div><div class="ob-n">'+esc(x.name)+'</div>'+(x.phone?'<a class="ob-p" href="tel:'+esc(String(x.phone).replace(/[^\d]/g,""))+'">'+esc(x.phone)+'</a>':"")+'</div>';}
-    var mgr=(by["사무국"]||[]).map(box).join("");
-    var cols=["현장팀","협력팀"];
-    Object.keys(by).forEach(function(t){if(t!=="사무국"&&cols.indexOf(t)<0)cols.push(t);});
-    var colsHtml=cols.filter(function(t){return by[t]&&by[t].length;}).map(function(t,i){
-      return '<div class="ocol"><div class="oh oh'+(i%3)+'">'+esc(t.replace("팀",""))+' <span>'+by[t].length+'</span></div>'+by[t].map(box).join("")+'</div>';
+    // (11/4) 협회 조직도 : 회원 명부의 직책(role)·소속(team)으로 자동 구성. 이름을 누르면 전화.
+    var TEAMS=["기획","행정·총무","대외협력·청원","언론·프레스","교육·민간자격"];
+    var R=function(x){return String(x.role||"");};
+    var isSec=function(x){return /사무국장/.test(R(x));};
+    var isRep=function(x){return !isSec(x)&&/대표|회장/.test(R(x));};
+    var isAud=function(x){return /감사/.test(R(x));};
+    var isDir=function(x){return !isSec(x)&&!isRep(x)&&!isAud(x)&&/이사/.test(R(x));};
+    var nm=function(a,b){return act.indexOf(a)-act.indexOf(b);};
+    function chip(x,tag){
+      var ph=String(x.phone||"").replace(/[^\d]/g,"");
+      var t=tag?'<i>'+esc(tag)+'</i>':'';
+      return ph?'<a class="kp" href="tel:'+ph+'" title="'+esc(x.phone)+'"><b>'+esc(x.name)+'</b>'+t+'<span class="kc">📞</span></a>'
+               :'<span class="kp nop" title="연락처 미등록"><b>'+esc(x.name)+'</b>'+t+'</span>';
+    }
+    function box(title,people,cls){
+      return '<div class="kb '+(cls||"")+'"><div class="kr">'+esc(title)+'</div><div class="kps">'+(people.length?people.map(function(x){return chip(x);}).join(""):'<span class="kem">미정</span>')+'</div></div>';
+    }
+    var reps=act.filter(isRep),auds=act.filter(isAud),dirs=act.filter(isDir),secs=act.filter(isSec);
+    var by={},extra=[];
+    act.forEach(function(x){
+      var t=String(x.team||"").trim();
+      if(!t||t==="-"||t==="사무국"||t==="이사회"){if(!isRep(x)&&!isSec(x)&&!isAud(x)&&!isDir(x))t="소속 미정";else return;}
+      if(!by[t]){by[t]=[];if(TEAMS.indexOf(t)<0)extra.push(t);}
+      by[t].push(x);
+    });
+    var rk=function(x){return isAud(x)?2:(isDir(x)?1:0);};
+    var teamHtml=TEAMS.concat(extra).map(function(t){
+      var ps=(by[t]||[]).slice().sort(function(a,b){return rk(b)-rk(a)||nm(a,b);});
+      return '<div class="kt"><div class="ktn">'+esc(t)+'</div>'+(ps.length?ps.map(function(x){return chip(x,isAud(x)?"감사":(isDir(x)?"이사":""));}).join(""):'<span class="kem">미정</span>')+'</div>';
     }).join("");
-    var wlbl=function(w){w=String(w||"");if(w.indexOf("3교대")>=0)return "3교대";if(w.indexOf("격일")>=0)return "격일(맞교대)";if(w.indexOf("2교대")>=0)return "2교대(주·야)";if(w.indexOf("일근")>=0)return "주간";return w||"기타";};
-    var teamsAll=["사무국"].concat(cols).filter(function(t){return by[t]&&by[t].length;});
-    var wlines=teamsAll.map(function(t){
-      var g={},ord=[];
-      by[t].forEach(function(x){var L=wlbl(x.work);if(!g[L]){g[L]=[];ord.push(L);}g[L].push(x.name);});
-      ord.sort(function(a,b){return (a==="주간"?0:1)-(b==="주간"?0:1);});
-      var parts=ord.map(function(L){return '<b>'+esc(L)+'</b>'+g[L].map(esc).join(", ");});
-      return '<div class="owl"><span class="owt">'+esc(t==="사무국"?"임원":t)+'</span>'+parts.join(' &nbsp;·&nbsp; ')+'</div>';
-    }).join("");
-    return '<div class="si-h">조직도 <span style="font-weight:400;font-size:10.5px;color:#9A9A90">재직자 기준 자동 반영</span></div>'
-      +(mgr?'<div class="omgr">'+mgr+'</div><div class="oline"></div>':"")
-      +'<div class="ogrid">'+colsHtml+'</div>'
-      +'<div class="oworks"><div class="owh">근무 편성 <span style="font-weight:400;color:#9A9A90">· 근무형태 값 자동 반영</span></div>'+wlines+'</div>';
+    return '<div class="ko">'
+      +'<div class="ko-h">🏛️ 조직도<span>이름을 누르면 바로 전화가 걸립니다</span></div>'
+      +'<div class="kcol"><div class="kb gen"><div class="kr">총 회</div><div class="kn">재적 회원 '+act.length+'명</div></div></div>'
+      +'<div class="kmid"><div class="kvl"></div><div class="khl"></div>'+box("감 사",auds,"aud")+'</div>'
+      +'<div class="kcol">'+box(reps.length&&/임시/.test(R(reps[0]))?"임시대표":"대 표",reps,"top")+'</div>'
+      +'<div class="kcol"><div class="kv"></div>'+box("이사회",dirs,"")+'<div class="kv"></div></div>'
+      +'<div class="khub"><div class="klbl">사무국</div><div class="kcol">'+box("사무국장",secs,"top sec")+'</div><div class="kts">'+teamHtml+'</div></div>'
+      +'</div>';
   }
   function bindEmpCards(body){
     body.querySelectorAll("[data-etoggle]").forEach(function(el){el.addEventListener("click",function(){el.closest(".empitem").classList.toggle("open");});});
@@ -2195,6 +2241,7 @@
     $("hmInfo").innerHTML='<div class="hm-h">👤 내 정보</div>'+(me?('<div class="hm-kv"><b>이름</b>'+esc(me.name)+'</div><div class="hm-kv"><b>소속</b>'+esc([me.team,me.role].filter(Boolean).join(" · ")||"-")+'</div><div class="hm-kv"><b>근무</b>'+esc(me.work||"-")+'</div><div class="hm-kv"><b>입사일</b>'+esc(me.joinDate?fmtK(me.joinDate):"-")+'</div><div class="hm-kv"><b>연락처</b>'+esc(me.phone||"-")+'</div>'):'<div class="hm-empty">정보를 불러오지 못했습니다.</div>');
     $("hmRoster").innerHTML='<div class="hm-h" style="justify-content:space-between">📞 비상연락망'+(me&&me.site==="__KMPFA_NONE__"?'<button class="fbtn up" id="hmCallAll">전체 보기</button>':'')+'</div>'+(roster.length?roster.map(function(p){return '<div class="rperson"><div class="rp-l">'+esc(p.name)+'<span class="rp-role">'+esc([p.team,p.role].filter(Boolean).join(" "))+'</span></div>'+(p.phone?telLink(p.phone):'')+'</div>';}).join(""):'<div class="hm-empty">연락처가 없습니다.</div>');
     if($("hmCallAll"))$("hmCallAll").addEventListener("click",openRosterSheet);
+    var hmo=$("hmOrg");if(hmo){hmo.innerHTML=roster.length?orgChartHtml(roster):"";hmo.style.display=roster.length?"":"none";}
     $("hmHire").addEventListener("click",function(){var u=SITE+"forms.html";if(APP&&APP.openUrl)APP.openUrl(u);else window.open(u,"_blank");});
     $("hmResign").addEventListener("click",openResign);
     renderHomeV11();
