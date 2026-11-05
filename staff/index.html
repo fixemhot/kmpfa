@@ -308,6 +308,8 @@
   .ebadge.new{background:#F1ECE3;color:#2A2724;}
   .ebadge.left{background:#FBEDEA;color:#9A3327;}
   .ebadge.miss{background:#FFF1E2;color:#B4661F;}
+  .ebadge.rec{background:#7A6247;color:#fff;border:0;cursor:pointer;font-family:inherit;line-height:1.4;}
+  .ebadge.cnt{background:#EDE4D6;color:#5E4A34;}
   .saldetail{margin-top:9px;border-top:1px dashed #E4E1D6;padding-top:8px;font-size:12px;color:#4A4A44;display:none;}
   .empitem.open .saldetail{display:block;}
   .saldetail .sd{display:flex;justify-content:space-between;padding:2px 0;}
@@ -755,7 +757,7 @@
   function isAdmin(){return role()==="admin";}
   function isMgr(){return role()==="manager";}
   function isStaff(){return role()==="staff";}
-  var library=[],notices=[],roster=[],me=null,supplyTemplate="",mgrSites=[],adminSet=true,testMode=false;
+  var memberTotal=0,library=[],notices=[],roster=[],me=null,supplyTemplate="",mgrSites=[],adminSet=true,testMode=false;
   var payslips=[],myDocs=[],mySigs={},myPosts=[],paySummary=[],sigCache={},approvers=[],apprDocs=[];   // 서버가 첫 화면에 실어 보낸 데이터 (없으면 따로 불러옴)
   function loadXLSX(){return new Promise(function(res){if(window.XLSX)return res(true);var sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";sc.onload=function(){res(true);};sc.onerror=function(){res(false);};document.head.appendChild(sc);});}
   cfg.url=API;saveCfg();
@@ -816,7 +818,7 @@
     pestLast=j.pestLast||"";pestStatus();
     empForms.slots=EMP_FORM_SLOTS;
     if(j.role){SESS=SESS||{};if(j.tk)SESS.tk=j.tk;SESS.role=j.role;SESS.name=j.name||SESS.name;SESS.site=j.site||SESS.site||"";saveSess();}
-    library=j.library||[];notices=j.notices||[];roster=j.roster||[];me=j.me||null;supplyTemplate=j.supplyTemplate||"";mgrSites=j.mgrSites||[];
+    memberTotal=j.memberTotal||0;library=j.library||[];notices=j.notices||[];roster=j.roster||[];me=j.me||null;supplyTemplate=j.supplyTemplate||"";mgrSites=j.mgrSites||[];
     payslips=j.payslips||[];myDocs=j.myDocs||[];mySigs=j.mySigs||{};myPosts=j.myPosts||[];paySummary=j.paySummary||[];approvers=j.approvers||[];apprDocs=j.apprDocs||[];
     if(j.siteDocs&&j.siteDocs.dogup&&j.siteDocs.dogup.laborTotal){DOGUP=j.siteDocs.dogup;PAYROLL=j.siteDocs.payroll;PERPERSON=j.siteDocs.perperson;DOC_XLSX_URL=j.siteDocs.xlsx||"";}
   }
@@ -1701,12 +1703,14 @@
     if(x.status==="비상근")badge+='<span class="ebadge new">비상근</span>';
     if(x.status==="사퇴예정"&&!x.leavePlan)badge+='<span class="ebadge left">사퇴 예정</span>';
     if(!(x.attachments&&x.attachments.length))badge+='<span class="ebadge miss">서류 누락</span>';
+    if(OFF_RE.test(String(x.role||""))&&x.status!=="퇴사"){var nrc=recCount(x.id);if(nrc)badge+='<span class="ebadge cnt">회원 '+nrc+'명</span>';badge+='<button class="ebadge rec" data-erecruit="'+esc(x.id)+'">＋ 회원 등록</button>';}
     var meta=[];
     if(x.work)meta.push(esc(x.work));
     if(x.joinDate)meta.push((isJoining?"합류 예정 ":"가입 ")+fmtK(x.joinDate));
     if(isLeft&&x.leaveDate)meta.push("사퇴 "+fmtK(x.leaveDate));
     if(!isLeft&&x.leavePlan)meta.push('<span style="color:#B4453A;font-weight:700">퇴사 예정 '+fmtK(x.leavePlan)+"</span>");
     if(x.phone)meta.push('<a href="tel:'+esc(String(x.phone).replace(/[^\d]/g,""))+'">'+esc(x.phone)+"</a>");
+    if(x.referrer)meta.push("소개 "+esc(x.refName||""));if(x.mtype&&x.mtype!=="일반회원")meta.push(esc(x.mtype));
     var certs=x.certs?'<div class="emeta">🎓 '+esc(x.certs)+'</div>':"";
     var act1=isLeft?'<button data-erej="'+esc(x.id)+'">복귀 처리</button>':'<button class="warn" data-eleave="'+esc(x.id)+'">사퇴 처리</button>';
     return '<div class="empitem" data-eid="'+esc(x.id)+'">'
@@ -1715,7 +1719,7 @@
       +'<div class="saldetail">'
       +((x.attachments||[]).length?('<div class="emeta" style="margin-top:7px">📎 '+(x.attachments||[]).map(function(a,i){return '<span class="pvatt" data-eatt="'+esc(x.id)+'|'+i+'">'+esc(a.name)+'</span>';}).join(" ")+'</div>'):"")
       +(x.memo?'<div class="emeta" style="margin-top:6px">'+esc(x.memo)+'</div>':"")
-      +'<div class="eactions"><button data-eedit="'+esc(x.id)+'">✏️ 수정</button>'+act1+'<button class="warn" data-edel="'+esc(x.id)+'">삭제</button></div>'
+      +'<div class="eactions"><button '+(x.referrer?'data-redit':'data-eedit')+'="'+esc(x.id)+'">✏️ 수정</button>'+act1+'<button class="warn" data-edel="'+esc(x.id)+'">삭제</button></div>'
       +'</div></div>';
   }
   function renderEmp(){
@@ -1757,13 +1761,15 @@
         return;
       }
       var teams={};var order=["대표","사무국","기획","행정·총무","대외협력·청원","언론·프레스","교육·민간자격","기타"];
-      list.forEach(function(x){var t=x.team&&x.team!=="-"?x.team:(/대표|회장/.test(String(x.role||""))?"대표":"기타");(teams[t]=teams[t]||[]).push(x);});
+      list.forEach(function(x){if(x.referrer)return;var t=x.team&&x.team!=="-"?x.team:(/대표|회장/.test(String(x.role||""))?"대표":"기타");(teams[t]=teams[t]||[]).push(x);});
       var rk2=function(x){var r=String(x.role||"");return /대표|회장/.test(r)?4:(/사무국장/.test(r)?3:(/감사/.test(r)?2:(/이사/.test(r)?1:0)));};
       Object.keys(teams).forEach(function(t){var a=teams[t];teams[t]=a.map(function(x,i){return [x,i];}).sort(function(p,q){return rk2(q[0])-rk2(p[0])||p[1]-q[1];}).map(function(p){return p[0];});});
       order.concat(Object.keys(teams).filter(function(t){return order.indexOf(t)<0;})).forEach(function(t){
         if(!teams[t])return;
         html+='<div class="eteam">'+esc(t)+' ('+teams[t].length+'명)</div>'+teams[t].map(empCard).join("");
       });
+      var refs={},rorder=[];list.forEach(function(x){if(!x.referrer)return;var k=x.refName||"소개자 미상";if(!refs[k]){refs[k]=[];rorder.push(k);}refs[k].push(x);});
+      rorder.forEach(function(k){html+='<div class="eteam">일반회원 · 소개 '+esc(k)+' ('+refs[k].length+'명)</div>'+refs[k].map(empCard).join("");});
       var tot=list.reduce(function(s,x){return s+(Number(x.total)||0);},0);
       var miss=list.filter(function(x){return !(x.attachments&&x.attachments.length);}).length;
       html+='<div class="statusbar">현재 임원 '+list.length+'명'+(miss?' · <span style="color:#B4661F;font-weight:700">서류 누락 '+miss+'명</span>':'')+'</div>';
@@ -1778,7 +1784,7 @@
     if(!act.length){el.innerHTML="";return;}
     el.innerHTML=orgChartHtml(act);
   }
-  function orgChartHtml(act){
+  function orgChartHtml(act,orgTotal){
     // (11/4) 협회 조직도 : 회원 명부의 직책(role)·소속(team)으로 자동 구성. 이름을 누르면 전화.
     var TEAMS=["기획","행정·총무","대외협력·청원","언론·프레스","교육·민간자격"];
     var R=function(x){return String(x.role||"");};
@@ -1800,7 +1806,7 @@
     var by={},extra=[];
     act.forEach(function(x){
       var t=String(x.team||"").trim();
-      if(!t||t==="-"||t==="사무국"||t==="이사회"){if(!isRep(x)&&!isSec(x)&&!isAud(x)&&!isDir(x))t="소속 미정";else return;}
+      if(!t||t==="-"||t==="사무국"||t==="이사회")return;
       if(!by[t]){by[t]=[];if(TEAMS.indexOf(t)<0)extra.push(t);}
       by[t].push(x);
     });
@@ -1811,14 +1817,80 @@
     }).join("");
     return '<div class="ko">'
       +'<div class="ko-h">🏛️ 조직도<span>이름을 누르면 바로 전화가 걸립니다</span></div>'
-      +'<div class="kcol"><div class="kb gen"><div class="kr">총 회</div><div class="kn">재적 회원 '+act.length+'명</div></div></div>'
+      +'<div class="kcol"><div class="kb gen"><div class="kr">총 회</div><div class="kn">재적 회원 '+(orgTotal||act.length)+'명</div></div></div>'
       +'<div class="kmid"><div class="kvl"></div><div class="khl"></div>'+box("감 사",auds,"aud")+'</div>'
       +'<div class="kcol">'+box(reps.length&&/임시/.test(R(reps[0]))?"임시대표":"대 표",reps,"top")+'</div>'
       +'<div class="kcol"><div class="kv"></div>'+box("이사회",dirs,"")+'<div class="kv"></div></div>'
       +'<div class="khub"><div class="klbl">사무국</div><div class="kcol">'+box("사무국장",secs,"top sec")+'</div><div class="kts">'+teamHtml+'</div></div>'
       +'</div>';
   }
+  // ==================== (11/5) 임원이 데려온 일반회원 등록 (회원가입신청서) ====================
+  var OFF_RE=/임원|대표|회장|이사|감사|사무국장/;
+  function recCount(id){return employees.filter(function(e){return String(e.referrer)===String(id)&&e.status!=="퇴사";}).length;}
+  function openRecruitForm(refId,editId){
+    var x=editId?employees.filter(function(e){return String(e.id)===String(editId);})[0]:null;
+    var ref=employees.filter(function(e){return String(e.id)===String(x?x.referrer:refId);})[0]||{};
+    var cs=(x&&x.consent)||{};var pet=String((x&&x.pet)||"");var hasPet=pet&&pet!=="없음";
+    var v=function(k){return esc(x?(x[k]||""):"");};
+    var mt=(x&&x.mtype)||"일반회원";
+    openSheet('<h3>'+(x?'회원 정보 수정':'일반회원 등록')+'</h3>'
+      +'<div style="font-size:12px;color:#8A8278;margin:-4px 0 10px">소개 임원: <b style="color:#5E4A34">'+esc((ref.name||(x&&x.refName)||"")+" "+(ref.role||""))+'</b></div>'
+      +'<div class="row2"><div class="field"><label>성명 *</label><input type="text" id="rc_name" value="'+v("name")+'" placeholder="홍길동"></div>'
+      +'<div class="field"><label>회원 구분</label><select id="rc_mtype">'+["일반회원","특별회원","임원(후보)"].map(function(o){return '<option'+(o===mt?' selected':'')+'>'+o+'</option>';}).join("")+'</select></div></div>'
+      +'<div class="row2"><div class="field"><label>생년월일 6자리</label><input type="text" id="rc_birth" inputmode="numeric" maxlength="6" value="'+v("birth")+'" placeholder="671030"></div>'
+      +'<div class="field"><label>성별</label><select id="rc_gender"><option'+(x&&x.gender==="남"?' selected':'')+'>남</option><option'+(!x||x.gender!=="남"?' selected':'')+'>여</option></select></div></div>'
+      +'<div class="field"><label>휴대전화 <small style="color:#868C94;font-weight:400">(로그인 비밀번호 뒷자리 4자리)</small></label><input type="tel" id="rc_phone" value="'+v("phone")+'" placeholder="010-0000-0000"></div>'
+      +'<div class="field"><label>이메일</label><input type="email" id="rc_email" value="'+v("email")+'"></div>'
+      +'<div class="field"><label>주소</label><input type="text" id="rc_addr" value="'+v("addr")+'"></div>'
+      +'<div class="field"><label>직업·소속</label><input type="text" id="rc_job" value="'+v("job")+'"></div>'
+      +'<div class="row2"><div class="field"><label>반려동물</label><select id="rc_pet"><option'+(!hasPet?' selected':'')+'>없음</option><option'+(hasPet?' selected':'')+'>있음</option></select></div>'
+      +'<div class="field"><label>종류·마릿수</label><input type="text" id="rc_petd" value="'+esc(hasPet?pet.replace(/^있음\s*/,""):"")+'" placeholder="예: 개 1, 고양이 2"></div></div>'
+      +'<div class="field"><label>신청일</label><input type="date" id="rc_apply" value="'+v("applyDate")+'"></div>'
+      +'<div class="field"><label>동의 (신청서 체크 내용)</label>'
+      +'<label style="display:flex;align-items:center;gap:8px;font-weight:400;margin:6px 0;font-size:13px;color:#2A2724"><input type="checkbox" style="width:18px;height:18px;margin:0;flex:none;padding:0" id="rc_c1"'+(x?(cs.privacy?' checked':''):' checked')+'> 개인정보 수집·이용 동의 (필수)</label>'
+      +'<label style="display:flex;align-items:center;gap:8px;font-weight:400;margin:6px 0;font-size:13px;color:#2A2724"><input type="checkbox" style="width:18px;height:18px;margin:0;flex:none;padding:0" id="rc_c2"'+(x?(cs.rules?' checked':''):' checked')+'> 회칙 준수 서약</label>'
+      +'<label style="display:flex;align-items:center;gap:8px;font-weight:400;margin:6px 0;font-size:13px;color:#2A2724"><input type="checkbox" style="width:18px;height:18px;margin:0;flex:none;padding:0" id="rc_c3"'+(x?(cs.notice?' checked':''):' checked')+'> 문자·이메일 안내 수신 동의</label></div>'
+      +'<div class="field"><label>메모</label><input type="text" id="rc_memo" value="'+v("memo")+'"></div>'
+      +'<div class="field"><label>회원가입신청서 사진 <small style="color:#868C94;font-weight:400">(여러 장 가능)</small></label>'
+      +((x&&(x.attachments||[]).length)?'<div style="font-size:12px;color:#6B645A;margin-bottom:6px">📎 '+(x.attachments||[]).map(function(a){return esc(a.name);}).join(", ")+'</div>':'')
+      +'<input type="file" id="rc_file" accept="image/*,application/pdf" multiple></div>'
+      +'<div class="err hide" id="rc_err"></div>'
+      +'<div class="btns" style="margin-top:12px"><button class="btn ghost" id="rc_cancel">취소</button><button class="btn primary" id="rc_save">'+(x?'수정 저장':'등록하기')+'</button></div>');
+    $("rc_cancel").addEventListener("click",closeSheet);
+    $("rc_save").addEventListener("click",async function(){
+      var btn=this,er=$("rc_err");er.classList.add("hide");
+      var name=$("rc_name").value.trim();
+      if(!name){er.textContent="성명을 입력해 주세요.";er.classList.remove("hide");return;}
+      if(!$("rc_c1").checked){er.textContent="개인정보 수집·이용에 동의해야 가입할 수 있습니다.";er.classList.remove("hide");return;}
+      var fs=Array.prototype.slice.call($("rc_file").files||[]);
+      if(fs.some(function(f){return f.size>10*1024*1024;})){er.textContent="10MB가 넘는 파일이 있습니다.";er.classList.remove("hide");return;}
+      btn.disabled=true;btn.textContent="저장 중…";
+      try{
+        var news=[];for(var i=0;i<fs.length;i++){var a=await readFile(fs[i]);if(a)news.push({name:name+"_회원가입신청서"+(fs.length>1?"_"+(i+1):"")+((/\.[A-Za-z0-9]+$/.exec(fs[i].name)||[".jpg"])[0]),type:fs[i].type||"image/jpeg",dataB64:String(a.dataUrl).split(",")[1]});}
+        var petv=$("rc_pet").value==="있음"?("있음 "+$("rc_petd").value.trim()).trim():"없음";
+        var f={name:name,mtype:$("rc_mtype").value,birth:$("rc_birth").value.replace(/[^0-9]/g,"").slice(0,6),gender:$("rc_gender").value,
+          phone:$("rc_phone").value.trim(),email:$("rc_email").value.trim(),addr:$("rc_addr").value.trim(),job:$("rc_job").value.trim(),pet:petv,
+          applyDate:$("rc_apply").value,consent:{privacy:$("rc_c1").checked,rules:$("rc_c2").checked,notice:$("rc_c3").checked},memo:$("rc_memo").value.trim()};
+        if(x){
+          var rec={};for(var k in x)if(k!=="attachments"&&k!=="id")rec[k]=x[k];for(var k2 in f)rec[k2]=f[k2];
+          if(!rec.joinDate)rec.joinDate=f.applyDate;
+          var keep=(x.attachments||[]).map(function(a){return {name:a.name,url:a.url,id:a.id,type:a.type||""};});
+          var ur=await cloudPost({action:"empUpdate",id:x.id,record:rec,keepAttachments:keep,attachments:news});
+          for(var k3 in rec)x[k3]=rec[k3];x.attachments=ur.attachments||keep;toast("수정했습니다");
+        }else{
+          var nr={role:"회원",team:"",work:"",status:"재직",certs:"",leaveDate:"",leavePlan:"",deps:"",base:0,allow:0,ot:0,annual:0,sev:0,paySum:0,total:0,
+            joinDate:f.applyDate||todayISO(),site:ref.site||curBuilding(),referrer:ref.id,refName:ref.name||""};
+          for(var k4 in f)nr[k4]=f[k4];
+          var res=await cloudPost({action:"empAdd",record:nr,keepAttachments:[],attachments:news});
+          nr.id=res.id;nr.attachments=res.attachments||[];employees.push(nr);toast(name+"님을 등록했습니다");
+        }
+        closeSheet();renderEmp();
+      }catch(e){er.textContent="실패: "+e.message;er.classList.remove("hide");btn.disabled=false;btn.textContent=x?"수정 저장":"등록하기";}
+    });
+  }
   function bindEmpCards(body){
+    body.querySelectorAll("[data-erecruit]").forEach(function(b){b.addEventListener("click",function(ev){ev.stopPropagation();openRecruitForm(b.getAttribute("data-erecruit"),null);});});
+    body.querySelectorAll("[data-redit]").forEach(function(b){b.addEventListener("click",function(){openRecruitForm(null,b.getAttribute("data-redit"));});});
     body.querySelectorAll("[data-etoggle]").forEach(function(el){el.addEventListener("click",function(){el.closest(".empitem").classList.toggle("open");});});
     body.querySelectorAll("[data-eedit]").forEach(function(b){b.addEventListener("click",function(){openEmpForm(b.getAttribute("data-eedit"));});});
     body.querySelectorAll("[data-edel]").forEach(function(b){b.addEventListener("click",function(){delEmp(b.getAttribute("data-edel"));});});
@@ -2278,7 +2350,7 @@
     $("mgrCall").innerHTML='<div class="hm-h" style="justify-content:space-between">📞 비상연락망'+(site0==="__KMPFA_NONE__"?'<button class="fbtn up" id="mgrCallAll">전체 보기 (유관기관 포함)</button>':'')+'</div>'
       +(roster.length?roster.map(function(p){return '<div class="rperson"><div class="rp-l">'+esc(p.name)+'<span class="rp-role">'+esc([p.team,p.role].filter(Boolean).join(" "))+'</span></div>'+(p.phone?telLink(p.phone):'')+'</div>';}).join(""):'<div class="hm-empty">등록된 회원이 없습니다.</div>');
     if($("mgrCallAll"))$("mgrCallAll").addEventListener("click",openRosterSheet);
-    var og=$("mgrOrg");og.innerHTML=roster.length?orgChartHtml(roster):"";og.style.display=roster.length?"":"none";
+    var og=$("mgrOrg");og.innerHTML=roster.length?orgChartHtml(roster,memberTotal):"";og.style.display=roster.length?"":"none";
   }
   $("mgrLogout").addEventListener("click",function(){if(confirm("로그아웃할까요?"))logoutLocal();});
   $("supplyBtn").addEventListener("click",function(){
@@ -2300,7 +2372,7 @@
     $("hmInfo").innerHTML='<div class="hm-h">👤 내 정보</div>'+(me?('<div class="hm-kv"><b>이름</b>'+esc(me.name)+'</div><div class="hm-kv"><b>소속</b>'+esc([me.team,me.role].filter(Boolean).join(" · ")||"-")+'</div><div class="hm-kv"><b>근무</b>'+esc(me.work||"-")+'</div><div class="hm-kv"><b>입사일</b>'+esc(me.joinDate?fmtK(me.joinDate):"-")+'</div><div class="hm-kv"><b>연락처</b>'+esc(me.phone||"-")+'</div>'):'<div class="hm-empty">정보를 불러오지 못했습니다.</div>');
     $("hmRoster").innerHTML='<div class="hm-h" style="justify-content:space-between">📞 비상연락망'+(me&&me.site==="__KMPFA_NONE__"?'<button class="fbtn up" id="hmCallAll">전체 보기</button>':'')+'</div>'+(roster.length?roster.map(function(p){return '<div class="rperson"><div class="rp-l">'+esc(p.name)+'<span class="rp-role">'+esc([p.team,p.role].filter(Boolean).join(" "))+'</span></div>'+(p.phone?telLink(p.phone):'')+'</div>';}).join(""):'<div class="hm-empty">연락처가 없습니다.</div>');
     if($("hmCallAll"))$("hmCallAll").addEventListener("click",openRosterSheet);
-    var hmo=$("hmOrg");if(hmo){hmo.innerHTML=roster.length?orgChartHtml(roster):"";hmo.style.display=roster.length?"":"none";}
+    var hmo=$("hmOrg");if(hmo){hmo.innerHTML=roster.length?orgChartHtml(roster,memberTotal):"";hmo.style.display=roster.length?"":"none";}
     $("hmHire").addEventListener("click",function(){var u=SITE+"forms.html";if(APP&&APP.openUrl)APP.openUrl(u);else window.open(u,"_blank");});
     $("hmResign").addEventListener("click",openResign);
     renderHomeV11();
