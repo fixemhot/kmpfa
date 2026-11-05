@@ -575,7 +575,7 @@
       <button data-e="joining">합류예정 임원</button>
       <button data-e="left">사퇴 임원</button>
     </div>
-    <button class="mini" id="empNewBtn" style="margin-top:12px">＋ 회원 등록</button>
+    <button class="mini" id="empNewBtn" style="margin-top:12px">＋ 임원 가입</button>
     <div id="empForm" class="card hide">
       <div class="row2">
         <div class="field"><label>성명</label><input type="text" id="e_name" placeholder="홍길동" /></div>
@@ -1663,7 +1663,7 @@
       if(dup)rb.textContent="⟲ 중복 감지됨 — 명단 초기화로 바로잡기 (재직 17 + 퇴사 5)";
     }
     var nb=$("empNewBtn");
-    if(nb){nb.textContent = empSeg==="plan" ? "👥 퇴사 예정 등록 (회원 선택)" : (empSeg==="joining" ? "＋ 합류예정 임원 등록" : "＋ 회원 등록");}
+    if(nb){nb.textContent = empSeg==="plan" ? "👥 퇴사 예정 등록 (회원 선택)" : (empSeg==="joining" ? "＋ 합류예정 임원 등록" : "＋ 임원 가입");}
     var body=$("empList");
     if(!haveUrl()){body.innerHTML="";return;}
     var arr=scopedEmp();
@@ -1674,7 +1674,7 @@
       html=list.map(empCard).join("");
     }else if(empSeg==="joining"){
       list=arr.filter(function(x){return x.status==="입사예정";}).sort(function(a,b){return String(a.joinDate||"9999")<String(b.joinDate||"9999")?-1:1;});
-      if(!list.length){body.innerHTML='<div class="empty">합류 예정 임원이 없습니다.<br>＋ 회원 등록에서 상태를 \'입사예정\'으로, 입사일을 예정 날짜로 저장해 두면<br>입사일이 되는 날 자동으로 재직 명단에 들어갑니다.</div>';return;}
+      if(!list.length){body.innerHTML='<div class="empty">합류 예정 임원이 없습니다.<br>＋ 임원 가입에서 상태를 \'입사예정\'으로, 가입일을 예정 날짜로 저장해 두면<br>입사일이 되는 날 자동으로 재직 명단에 들어갑니다.</div>';return;}
       html=list.map(empCard).join("");
     }else if(empSeg==="plan"){
       list=arr.filter(function(x){return x.status!=="퇴사"&&x.status!=="입사예정"&&x.leavePlan;}).sort(function(a,b){return String(a.leavePlan)<String(b.leavePlan)?-1:1;});
@@ -1683,7 +1683,7 @@
     }else{
       list=arr.filter(function(x){return x.status!=="퇴사"&&x.status!=="입사예정";});
       if(!list.length){
-        body.innerHTML='<div class="empty">등록된 회원이 없습니다.<br>＋ 회원 등록으로 추가하세요.</div>'+(curBuilding()==="__KMPFA_NONE__"?'<button class="mini" id="empSeedBtn">📥 __KMPFA_NONE__ 명단 불러오기 (재직 17명 + 퇴사 5명)</button>':'');
+        body.innerHTML='<div class="empty">등록된 회원이 없습니다.<br>＋ 임원 가입으로 추가하세요.</div>'+(curBuilding()==="__KMPFA_NONE__"?'<button class="mini" id="empSeedBtn">📥 __KMPFA_NONE__ 명단 불러오기 (재직 17명 + 퇴사 5명)</button>':'');
         var sb=$("empSeedBtn");if(sb)sb.addEventListener("click",seedEmployees);
         return;
       }
@@ -1859,7 +1859,7 @@
   function renderEmpForms(){
     var el=$("empFormsCard");if(!el)return;
     var slots=empForms.slots||[], files=empForms.files||{};
-    if(!slots.length){el.innerHTML='<div class="si-h">회원가입 서류 안내</div><div style="font-size:12px;color:#9A9A90;padding:4px 0">서버에 연결하면 서류 목록이 표시됩니다.</div>';return;}
+    if(!slots.length){el.innerHTML='<div class="si-h">임원가입 서류 안내</div><div style="font-size:12px;color:#9A9A90;padding:4px 0">서버에 연결하면 서류 목록이 표시됩니다.</div>';return;}
     function row(sl){
       var f=files[sl.k];
       var right=f
@@ -1871,7 +1871,7 @@
         +'</div>'+right+'</div>';
     }
     var forms=slots.filter(function(x){return x.g==="양식";}).map(row).join("");
-    el.innerHTML='<div class="si-h" style="display:flex;justify-content:space-between;align-items:center;gap:8px">회원가입 양식'
+    el.innerHTML='<div class="si-h" style="display:flex;justify-content:space-between;align-items:center;gap:8px">임원가입 양식'
       +'<button class="fbtn send" id="formSendBtn">📤 가입자에게 보내기</button></div>'
       +'<div style="font-size:11.5px;color:#8A8A80;line-height:1.5;margin:2px 0 4px">양식 파일을 올려두고 보내기를 누르면, 가입자가 링크에서 양식을 내려받아 작성하고 준비한 서류를 사진으로 바로 제출합니다. 제출된 서류는 드라이브의 <b>입사서류제출/이름</b> 폴더에 쌓입니다.</div>'+forms;
     el.querySelectorAll("[data-fup]").forEach(function(b){b.addEventListener("click",function(){if(!haveUrl()){toast("서버 연결이 필요합니다");return;}pendingFormKey=b.getAttribute("data-fup");$("formFileInput").click();});});
@@ -1893,14 +1893,14 @@
   function sendFormsLink(){
     if(!haveUrl()){toast("서버 연결이 필요합니다");setView("settings");return;}
     var url=SITE+"forms.html";
-    var msg="📋 [회원가입 서류 제출]\n아래 링크에서 서류 목록을 확인하시고, 양식은 내려받아 작성한 뒤 사진·스캔본을 올려주세요.\n👉 "+url;
-    openSheet('<h3>회원가입 서류 안내 보내기</h3>'
-      +'<div style="font-size:12px;color:#8A8A80;margin-bottom:10px;line-height:1.5">새로 가입하는 회원에게 이 링크를 보내면, 서류 목록 확인 → 양식 내려받기 → 준비 서류 사진 제출까지 링크 하나로 끝납니다.</div>'
+    var msg="📋 [임원가입 서류 제출]\n아래 링크에서 서류 목록을 확인하시고, 양식은 내려받아 작성한 뒤 사진·스캔본을 올려주세요.\n👉 "+url;
+    openSheet('<h3>임원가입 서류 안내 보내기</h3>'
+      +'<div style="font-size:12px;color:#8A8A80;margin-bottom:10px;line-height:1.5">새로 가입하는 임원에게 이 링크를 보내면, 서류 목록 확인 → 양식 내려받기 → 준비 서류 사진 제출까지 링크 하나로 끝납니다.</div>'
       +'<div style="font-size:11px;color:#8A8A80;word-break:break-all;border:1px solid #E4E1D6;border-radius:10px;padding:10px;margin-bottom:10px">'+esc(url)+'</div>'
       +'<div style="display:flex;gap:8px"><button class="mini" style="margin:0" id="fCopy">복사</button><button class="mini" style="margin:0" id="fShare">카톡·공유</button></div>'
       +'<button class="btn ghost" id="fClose" style="width:100%;margin-top:12px">닫기</button>');
     $("fCopy").addEventListener("click",function(){copyText(url);});
-    $("fShare").addEventListener("click",function(){if(APP){APP.share(msg);return;}if(navigator.share){navigator.share({title:"회원가입 서류 안내",text:msg}).catch(function(){});}else{copyText(msg);}});
+    $("fShare").addEventListener("click",function(){if(APP){APP.share(msg);return;}if(navigator.share){navigator.share({title:"임원가입 서류 안내",text:msg}).catch(function(){});}else{copyText(msg);}});
     $("fClose").addEventListener("click",closeSheet);
   }
   $("formFileInput").addEventListener("change",function(e){var fs=Array.prototype.slice.call(e.target.files);e.target.value="";if(!pendingFormKey||!fs.length)return;setFormSlot(pendingFormKey,fs[0]);pendingFormKey=null;});
