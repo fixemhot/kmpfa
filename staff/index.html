@@ -1696,14 +1696,14 @@
     var body=$("memList");if(!body)return;
     if(!haveUrl()){body.innerHTML='<div class="empty">서버에 연결되지 않았습니다.</div>';return;}
     var list=scopedEmp().filter(function(x){return x.status!=="퇴사"&&x.status!=="입사예정"&&!OFF_RE.test(String(x.role||""));});
-    var nRef=list.filter(function(x){return x.referrer;}).length;
-    var html='<div class="hm-card" style="margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px"><div><b style="font-size:16px">🙋 일반회원 '+list.length+'명</b><div style="font-size:11.5px;color:#8A8278;margin-top:2px">임원 소개로 가입 '+nRef+'명 · 분야 소속 '+(list.length-nRef)+'명</div></div>'+(list.length?'<button class="fbtn up" id="memXls">📥 엑셀 내려받기</button>':'')+'</div>';
-    if(!list.length){html+='<div class="empty">일반회원이 없습니다.<br>회원 메뉴에서 임원 카드의 ＋ 회원 등록으로 추가하세요.</div>';}
+    var nRef=list.filter(function(x){return x.referrer&&x.referrer!=="natural";}).length,nNat=list.filter(function(x){return x.referrer==="natural";}).length;
+    var html='<div class="hm-card" style="margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px"><div><b style="font-size:16px">🙋 일반회원 '+list.length+'명</b><div style="font-size:11.5px;color:#8A8278;margin-top:2px">임원 소개 '+nRef+'명 · 자연 유입 '+nNat+'명 · 분야 소속 '+(list.length-nRef-nNat)+'명</div></div>'+'<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="fbtn up" id="memAdd">＋ 일반회원 등록</button>'+(list.length?'<button class="fbtn" id="memXls">📥 엑셀</button>':'')+'</div></div>';
+    if(!list.length){html+='<div class="empty">일반회원이 없습니다.<br>위의 ＋ 일반회원 등록으로 추가하세요.</div>';}
     else{
       var own=list.filter(function(x){return !x.referrer;});
       if(own.length)html+='<div class="eteam">분야 소속 회원 ('+own.length+'명)</div>'+own.map(empCard).join("");
       var mg={},mo=[];list.forEach(function(x){if(!x.referrer)return;var k=x.refName||"소개자 미상";if(!mg[k]){mg[k]=[];mo.push(k);}mg[k].push(x);});
-      mo.forEach(function(k){html+='<div class="eteam">소개 '+esc(k)+' ('+mg[k].length+'명)</div>'+mg[k].map(empCard).join("");});
+      mo.forEach(function(k){html+='<div class="eteam">'+(k==="자연 유입"?"🌱 자연 유입":"소개 "+esc(k))+' ('+mg[k].length+'명)</div>'+mg[k].map(empCard).join("");});
     }
     body.innerHTML=html;
     [["data-eedit","data-meedit"],["data-eleave","data-meleave"],["data-edel","data-medel"],["data-erej","data-merej"]].forEach(function(p){
@@ -1714,6 +1714,7 @@
     body.querySelectorAll("[data-medel]").forEach(function(b){b.addEventListener("click",async function(){await delEmp(b.getAttribute("data-medel"));renderMembers();});});
     body.querySelectorAll("[data-merej]").forEach(function(b){b.addEventListener("click",async function(){await rejoinEmp(b.getAttribute("data-merej"));renderMembers();});});
     var mx=$("memXls");if(mx)mx.addEventListener("click",function(){memExport(list);});
+    var ma=$("memAdd");if(ma)ma.addEventListener("click",function(){openRecruitForm(null,null);});
   }
   // ---- (11/5) 일반회원 명단 엑셀 ----
   function memExport(list){
@@ -1756,7 +1757,7 @@
     if(isLeft&&x.leaveDate)meta.push("사퇴 "+fmtK(x.leaveDate));
     if(!isLeft&&x.leavePlan)meta.push('<span style="color:#B4453A;font-weight:700">퇴사 예정 '+fmtK(x.leavePlan)+"</span>");
     if(x.phone)meta.push('<a href="tel:'+esc(String(x.phone).replace(/[^\d]/g,""))+'">'+esc(x.phone)+"</a>");
-    if(x.referrer)meta.push("소개 "+esc(x.refName||""));if(x.mtype&&x.mtype!=="일반회원")meta.push(esc(x.mtype));
+    if(x.referrer)meta.push(x.referrer==="natural"?"자연 유입":"소개 "+esc(x.refName||""));if(x.mtype&&x.mtype!=="일반회원")meta.push(esc(x.mtype));
     var certs=x.certs?'<div class="emeta">🎓 '+esc(x.certs)+'</div>':"";
     var act1=isLeft?'<button data-erej="'+esc(x.id)+'">복귀 처리</button>':'<button class="warn" data-eleave="'+esc(x.id)+'">사퇴 처리</button>';
     return '<div class="empitem" data-eid="'+esc(x.id)+'">'
@@ -1894,8 +1895,11 @@
     var cs=(x&&x.consent)||{};var pet=String((x&&x.pet)||"");var hasPet=pet&&pet!=="없음";
     var v=function(k){return esc(x?(x[k]||""):"");};
     var mt=(x&&x.mtype)||"일반회원";
+    var curRef=x?(x.referrer||"natural"):(refId||"natural");
+    var offs=employees.filter(function(e){return OFF_RE.test(String(e.role||""))&&e.status!=="퇴사"&&e.status!=="입사예정";});
+    var refOpts='<option value="natural"'+(curRef==="natural"?' selected':'')+'>🌱 자연 유입 (임원 소개 없음)</option>'+offs.map(function(e){return '<option value="'+esc(e.id)+'" data-name="'+esc(e.name)+'"'+(String(e.id)===String(curRef)?' selected':'')+'>소개 · '+esc(e.name)+' '+esc(e.role||"")+'</option>';}).join("");
     openSheet('<h3>'+(x?'회원 정보 수정':'일반회원 등록')+'</h3>'
-      +'<div style="font-size:12px;color:#8A8278;margin:-4px 0 10px">소개 임원: <b style="color:#5E4A34">'+esc((ref.name||(x&&x.refName)||"")+" "+(ref.role||""))+'</b></div>'
+      +'<div class="field"><label>가입 경로 (소개 임원)</label><select id="rc_ref">'+refOpts+'</select></div>'
       +'<div class="field" style="background:#F5F2EB;border:1px solid #E2DCD0;border-radius:12px;padding:10px 10px 8px"><label>📄 회원가입신청서 사진</label>'
       +'<div class="twobtn" style="margin-top:2px"><button type="button" class="mini" id="rc_cam" style="margin-top:0">📷 촬영해서 올리기</button><button type="button" class="mini" id="rc_pick" style="margin-top:0">🖼 사진·파일 선택</button></div>'
       +'<label style="display:flex;align-items:center;gap:8px;font-weight:400;margin:8px 0 2px;font-size:12.5px;color:#2A2724"><input type="checkbox" id="rc_enh" checked style="width:18px;height:18px;margin:0;flex:none;padding:0"> 문서처럼 보정 (흑백·선명하게, 용량 줄이기)</label>'
@@ -1933,6 +1937,7 @@
         if(el.tagName==="SELECT"){if([].some.call(el.options,function(o){return o.value===v;}))el.value=v;return;}
         if(force||!el.value.trim())el.value=v;});
       if(f.privacy)$("rc_c1").checked=true;if(f.rules)$("rc_c2").checked=true;if(typeof f.notice==="boolean")$("rc_c3").checked=f.notice;
+      if(f.referrer){var rs=$("rc_ref");if(rs&&(force||rs.value==="natural")){var rn=String(f.referrer).replace(/\s/g,"");[].forEach.call(rs.options,function(o){var dn=o.getAttribute("data-name");if(dn&&rn.indexOf(dn)>=0)rs.value=o.value;});}}
       var pth=[f.path,f.referrer?("소개자 "+f.referrer):""].filter(Boolean).join(" · ");if(pth&&(force||!$("rc_memo").value.trim()))$("rc_memo").value="가입 경로: "+pth;
       Object.keys(RC_MAP).forEach(function(k){var el=$(RC_MAP[k][0]);if(el){el.style.borderColor="";el.style.background="";}});
       var un=(f.unsure||[]).filter(function(k){return RC_MAP[k];});
@@ -1966,6 +1971,8 @@
         var f={name:name,mtype:$("rc_mtype").value,birth:$("rc_birth").value.replace(/[^0-9]/g,"").slice(0,6),gender:$("rc_gender").value,
           phone:$("rc_phone").value.trim(),email:$("rc_email").value.trim(),addr:$("rc_addr").value.trim(),job:$("rc_job").value.trim(),pet:petv,
           applyDate:$("rc_apply").value,consent:{privacy:$("rc_c1").checked,rules:$("rc_c2").checked,notice:$("rc_c3").checked},memo:$("rc_memo").value.trim()};
+        var rsel=$("rc_ref"),rv=rsel.value,ro=rsel.options[rsel.selectedIndex];f.referrer=rv;f.refName=rv==="natural"?"자연 유입":(ro.getAttribute("data-name")||"");
+        var refEmp=employees.filter(function(e){return String(e.id)===String(rv);})[0];
         if(x){
           var rec={};for(var k in x)if(k!=="attachments"&&k!=="id")rec[k]=x[k];for(var k2 in f)rec[k2]=f[k2];
           if(!rec.joinDate)rec.joinDate=f.applyDate;
@@ -1974,7 +1981,7 @@
           for(var k3 in rec)x[k3]=rec[k3];x.attachments=ur.attachments||keep;toast("수정했습니다");
         }else{
           var nr={role:"회원",team:"",work:"",status:"재직",certs:"",leaveDate:"",leavePlan:"",deps:"",base:0,allow:0,ot:0,annual:0,sev:0,paySum:0,total:0,
-            joinDate:f.applyDate||todayISO(),site:ref.site||curBuilding(),referrer:ref.id,refName:ref.name||""};
+            joinDate:f.applyDate||todayISO(),site:(refEmp&&refEmp.site)||ref.site||curBuilding()};
           for(var k4 in f)nr[k4]=f[k4];
           var res=await cloudPost({action:"empAdd",record:nr,keepAttachments:[],attachments:news});
           nr.id=res.id;nr.attachments=res.attachments||[];employees.push(nr);toast(name+"님을 등록했습니다");
