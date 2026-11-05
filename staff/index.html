@@ -1619,39 +1619,31 @@
     var arr=scopedEmp();
     var act=arr.filter(function(x){return x.status!=="퇴사"&&x.status!=="입사예정";});
     var joinP=arr.filter(function(x){return x.status==="입사예정";}).length;
-    var leaveP=arr.filter(function(x){return x.status!=="퇴사"&&x.status!=="입사예정"&&x.leavePlan;}).length;
+    var leaveP=arr.filter(function(x){return x.status==="퇴사";}).length;
     $("empSummary").innerHTML=
-      '<div class="esc"><div class="n">'+act.length+'</div><div class="l">재직 인원</div></div>'
-      +'<div class="esc"><div class="n" style="color:'+(joinP?'#2A2724':'inherit')+'">'+joinP+'</div><div class="l">입사 예정</div></div>'
-      +'<div class="esc"><div class="n" style="color:'+(leaveP?'#B4661F':'inherit')+'">'+leaveP+'</div><div class="l">퇴사 예정</div></div>';
+      '<div class="esc"><div class="n">'+act.length+'</div><div class="l">현재 임원</div></div>'
+      +'<div class="esc"><div class="n" style="color:'+(joinP?'#2A2724':'inherit')+'">'+joinP+'</div><div class="l">합류 예정</div></div>'
+      +'<div class="esc"><div class="n" style="color:'+(leaveP?'#B4661F':'inherit')+'">'+leaveP+'</div><div class="l">사퇴 임원</div></div>';
   }
   function dDayTxt(iso){var t=new Date(todayISO()+"T00:00:00"),d=new Date(String(iso).slice(0,10)+"T00:00:00");var n=Math.round((d-t)/86400000);return n>0?("D-"+n):(n===0?"오늘":"");}
   function hasResign(x){return (x.attachments||[]).some(function(a){return String(a.name||"").indexOf("사직")>=0;});}
   function empCard(x){
     var isNew=empIsNew(x), isLeft=x.status==="퇴사", isJoining=x.status==="입사예정", isPlan=!isLeft&&!isJoining&&!!x.leavePlan;
-    var badge=isLeft?'<span class="ebadge left">퇴사</span>':(isJoining?'<span class="ebadge new">입사 예정'+(x.joinDate&&dDayTxt(x.joinDate)?(" "+dDayTxt(x.joinDate)):"")+'</span>':(isNew?'<span class="ebadge new">NEW</span>':""));
+    var badge=isLeft?'<span class="ebadge left">사퇴</span>':(isJoining?'<span class="ebadge new">합류 예정'+(x.joinDate&&dDayTxt(x.joinDate)?(" "+dDayTxt(x.joinDate)):"")+'</span>':(isNew?'<span class="ebadge new">NEW</span>':""));
     if(isPlan)badge+='<span class="ebadge left">퇴사 예정'+(dDayTxt(x.leavePlan)?(" "+dDayTxt(x.leavePlan)):"")+'</span>'+(hasResign(x)?'<span class="ebadge new">사직서 ✓</span>':'<span class="ebadge miss">사직서 미첨부</span>');
     if(!(x.attachments&&x.attachments.length))badge+='<span class="ebadge miss">서류 누락</span>';
-    if(!isLeft&&!isJoining&&!(Number(x.total)>0))badge+='<span class="ebadge miss">급여 누락</span>';
     var meta=[];
     if(x.work)meta.push(esc(x.work));
-    if(x.joinDate)meta.push((isJoining?"입사 예정 ":"입사 ")+fmtK(x.joinDate));
-    if(isLeft&&x.leaveDate)meta.push("퇴사 "+fmtK(x.leaveDate));
+    if(x.joinDate)meta.push((isJoining?"합류 예정 ":"가입 ")+fmtK(x.joinDate));
+    if(isLeft&&x.leaveDate)meta.push("사퇴 "+fmtK(x.leaveDate));
     if(!isLeft&&x.leavePlan)meta.push('<span style="color:#B4453A;font-weight:700">퇴사 예정 '+fmtK(x.leavePlan)+"</span>");
     if(x.phone)meta.push('<a href="tel:'+esc(String(x.phone).replace(/[^\d]/g,""))+'">'+esc(x.phone)+"</a>");
     var certs=x.certs?'<div class="emeta">🎓 '+esc(x.certs)+'</div>':"";
-    var act1=isLeft?'<button data-erej="'+esc(x.id)+'">복직 처리</button>':'<button class="warn" data-eleave="'+esc(x.id)+'">퇴사 처리</button>';
+    var act1=isLeft?'<button data-erej="'+esc(x.id)+'">복귀 처리</button>':'<button class="warn" data-eleave="'+esc(x.id)+'">사퇴 처리</button>';
     return '<div class="empitem" data-eid="'+esc(x.id)+'">'
-      +'<div class="eline" data-etoggle="'+esc(x.id)+'"><span><span class="enm">'+esc(x.name)+'</span><span class="erole">'+esc(x.role||"")+'</span>'+badge+'</span><span class="esal num">'+won(x.total)+'원</span></div>'
+      +'<div class="eline" data-etoggle="'+esc(x.id)+'"><span><span class="enm">'+esc(x.name)+'</span><span class="erole">'+esc(x.role||"")+'</span>'+badge+'</span></div>'
       +'<div class="emeta">'+meta.join(" · ")+'</div>'+certs
       +'<div class="saldetail">'
-      +'<div class="sd"><span>기본급</span><b>'+won(x.base)+'</b></div>'
-      +'<div class="sd"><span>제수당</span><b>'+won(x.allow)+'</b></div>'
-      +'<div class="sd"><span>연장·심야</span><b>'+won(x.ot)+'</b></div>'
-      +'<div class="sd"><span>급여계</span><b>'+won(x.paySum)+'</b></div>'
-      +'<div class="sd"><span>연차수당</span><b>'+won(x.annual)+'</b></div>'
-      +'<div class="sd"><span>퇴직충당금</span><b>'+won(x.sev)+'</b></div>'
-      +'<div class="sd tt"><span>월 총계</span><b>'+won(x.total)+'</b></div>'
       +((x.attachments||[]).length?('<div class="emeta" style="margin-top:7px">📎 '+(x.attachments||[]).map(function(a,i){return '<span class="pvatt" data-eatt="'+esc(x.id)+'|'+i+'">'+esc(a.name)+'</span>';}).join(" ")+'</div>'):"")
       +(x.memo?'<div class="emeta" style="margin-top:6px">'+esc(x.memo)+'</div>':"")
       +'<div class="eactions"><button data-eedit="'+esc(x.id)+'">✏️ 수정</button>'+act1+'<button class="warn" data-edel="'+esc(x.id)+'">삭제</button></div>'
@@ -1703,7 +1695,7 @@
       });
       var tot=list.reduce(function(s,x){return s+(Number(x.total)||0);},0);
       var miss=list.filter(function(x){return !(x.attachments&&x.attachments.length);}).length;
-      html+='<div class="statusbar">재직 '+list.length+'명 · 월 급여 총계 <b>'+won(tot)+'원</b>'+(miss?' · <span style="color:#B4661F;font-weight:700">서류 누락 '+miss+'명</span>':'')+'</div>';
+      html+='<div class="statusbar">현재 임원 '+list.length+'명'+(miss?' · <span style="color:#B4661F;font-weight:700">서류 누락 '+miss+'명</span>':'')+'</div>';
     }
     body.innerHTML=html;
     bindEmpCards(body);
