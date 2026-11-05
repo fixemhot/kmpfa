@@ -588,11 +588,11 @@
       <div class="field"><label>휴대폰 <small style="color:#868C94;font-weight:400">(로그인 비밀번호 뒷자리 4자리)</small></label><input type="tel" id="e_phone" placeholder="010-0000-0000" /></div>
       <div class="row2">
         <div class="field"><label>가입일</label><input type="date" id="e_join" /></div>
-        <div class="field"><label>상태</label><select id="e_status"><option>재직</option><option>입사예정</option><option>퇴사</option></select></div>
+        <div class="field"><label>상태</label><select id="e_status"><option>상근</option><option>비상근</option><option value="입사예정">합류예정</option><option>사퇴예정</option></select></div>
       </div>
       <div class="field"><label>생년월일 6자리</label><input type="text" id="e_birth" inputmode="numeric" maxlength="6" placeholder="620901" /></div>
-      <div class="field hide" id="e_leaveWrap"><label>퇴사일</label><input type="date" id="e_leave" /></div>
-      <div class="field"><label>퇴사 예정일 (사직서 접수 시 입력 — 날짜가 되면 자동으로 퇴사자 명단으로 이동)</label><input type="date" id="e_leavePlan" /></div>
+      <div class="field hide" id="e_leaveWrap"><label>사퇴일</label><input type="date" id="e_leave" /></div>
+      <div class="field"><label>사퇴 예정일 (날짜가 되면 자동으로 사퇴 임원으로 이동)</label><input type="date" id="e_leavePlan" /></div>
       <div style="display:none" aria-hidden="true">
         <select id="e_work"><option>일근</option><option>3교대(주당비)</option><option>2교대(주야)</option><option>격일(당비)</option><option>기타</option></select>
         <input type="text" id="e_deps" /><input type="text" id="e_certs" />
@@ -1620,6 +1620,8 @@
     var isNew=empIsNew(x), isLeft=x.status==="퇴사", isJoining=x.status==="입사예정", isPlan=!isLeft&&!isJoining&&!!x.leavePlan;
     var badge=isLeft?'<span class="ebadge left">사퇴</span>':(isJoining?'<span class="ebadge new">합류 예정'+(x.joinDate&&dDayTxt(x.joinDate)?(" "+dDayTxt(x.joinDate)):"")+'</span>':(isNew?'<span class="ebadge new">NEW</span>':""));
     if(isPlan)badge+='<span class="ebadge left">퇴사 예정'+(dDayTxt(x.leavePlan)?(" "+dDayTxt(x.leavePlan)):"")+'</span>'+(hasResign(x)?'<span class="ebadge new">사직서 ✓</span>':'<span class="ebadge miss">사직서 미첨부</span>');
+    if(x.status==="비상근")badge+='<span class="ebadge new">비상근</span>';
+    if(x.status==="사퇴예정"&&!x.leavePlan)badge+='<span class="ebadge left">사퇴 예정</span>';
     if(!(x.attachments&&x.attachments.length))badge+='<span class="ebadge miss">서류 누락</span>';
     var meta=[];
     if(x.work)meta.push(esc(x.work));
@@ -1768,7 +1770,7 @@
     $("e_name").value=x?x.name:"";$("e_role").value=x?(x.role||""):"";
     (function(v){var sl=$("e_team");if(v&&![].some.call(sl.options,function(o){return o.value===v;})){var op=document.createElement("option");op.textContent=v;sl.appendChild(op);}sl.value=v;})(x&&x.team?x.team:"사무국");$("e_work").value=x&&x.work?x.work:"일근";
     $("e_gender").value=x&&x.gender?x.gender:"남";$("e_phone").value=x?(x.phone||""):"";
-    $("e_join").value=x?(x.joinDate||""):"";$("e_status").value=x?(x.status||"재직"):"재직";
+    $("e_join").value=x?(x.joinDate||""):"";(function(v){var sl=$("e_status");[].slice.call(sl.querySelectorAll("option[data-x]")).forEach(function(o){o.remove();});if(!v||v==="재직")v="상근";var add=function(v,t){var sl=$("e_status");if(!sl.querySelector('option[value="'+v+'"]')){var o=document.createElement("option");o.value=v;o.textContent=t;o.setAttribute("data-x","1");sl.appendChild(o);}};if(v==="퇴사")add("퇴사","사퇴");else add(v,v);sl.value=v;})(x?x.status:"상근");
     $("e_leave").value=x?(x.leaveDate||""):"";
     $("e_leaveWrap").classList.toggle("hide",$("e_status").value!=="퇴사");
     $("e_certs").value=x?(x.certs||""):"";
@@ -1819,17 +1821,17 @@
   }
   function leaveEmp(id){
     openEmpForm(id);
-    $("e_status").value="퇴사";
+    (function(v,t){var sl=$("e_status");if(!sl.querySelector('option[value="'+v+'"]')){var o=document.createElement("option");o.value=v;o.textContent=t;o.setAttribute("data-x","1");sl.appendChild(o);}})("퇴사","사퇴");$("e_status").value="퇴사";
     $("e_leaveWrap").classList.remove("hide");
     if(!$("e_leave").value)$("e_leave").value=todayISO();
-    toast("퇴사일을 확인하고, 사직서가 있으면 첨부한 뒤 저장하세요");
+    toast("사퇴일을 확인한 뒤 저장하세요");
   }
   async function rejoinEmp(id){
     var x=employees.filter(function(e){return String(e.id)===String(id);})[0];if(!x)return;
-    if(!confirm(x.name+"님을 재직 상태로 되돌릴까요?"))return;
-    try{var rec={};for(var k in x)rec[k]=x[k];rec.status="재직";rec.leaveDate="";
+    if(!confirm(x.name+"님을 현재 임원(상근)으로 되돌릴까요?"))return;
+    try{var rec={};for(var k in x)rec[k]=x[k];rec.status="상근";rec.leaveDate="";
       await cloudPost({action:"empUpdate",id:id,record:rec,keepAttachments:(x.attachments||[]).map(function(a){return {name:a.name,url:a.url,id:a.id,type:a.type||""};})});
-      x.status="재직";x.leaveDate="";renderEmp();toast("복직 처리되었습니다");}
+      x.status="상근";x.leaveDate="";renderEmp();toast("복귀 처리되었습니다");}
     catch(e){toast("실패: "+e.message);}
   }
   async function delEmp(id){
