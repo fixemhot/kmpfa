@@ -579,6 +579,11 @@
   </div>
 
   <!-- 회원 -->
+  <!-- 일반회원 -->
+  <div id="v-members" class="wrap hide">
+    <div id="memList"></div>
+  </div>
+
   <div id="v-emp" class="wrap hide">
     <div id="noUrl5" class="banner hide">공유 서버가 연결되지 않아 회원 현황을 불러올 수 없습니다. <a class="goSet">설정</a>에서 주소를 넣어주세요.</div>
     <div class="hm-card" id="ntAdmin" style="margin-bottom:12px"></div>
@@ -586,7 +591,6 @@
     <div class="siteinfo" id="empFormsCard" style="margin-top:12px"></div>
     <div class="segbar" id="empSeg" style="margin-top:12px">
       <button data-e="active" class="on">현재 임원</button>
-      <button data-e="members">일반회원</button>
       <button data-e="joining">합류예정 임원</button>
       <button data-e="left">사퇴 임원</button>
     </div>
@@ -712,6 +716,7 @@
 
   <div class="nav">
     <button class="nav-btn on" data-v="emp"><span class="navic">👥</span>회원</button>
+    <button class="nav-btn" data-v="members"><span class="navic">🙋</span>일반회원</button>
     <button class="nav-btn" data-v="docs"><span class="navic">📄</span>문서</button>
     <button class="nav-btn hide" data-v="notice"><span class="navic">📢</span>공지</button>
     <button class="nav-btn" data-v="capture"><span class="navic">📷</span>입력</button>
@@ -846,9 +851,9 @@
   function setView(v){
     if(!role())v="login"; else if(isStaff()){if(v!=="field")v="home";} else if(v==="login"||v==="home")v=isMgr()?"capture":"emp";
     try{document.querySelector(".app").classList.toggle("on-login",v==="login");document.body.classList.toggle("on-login",v==="login");}catch(e){}
-    if(isMgr()&&["settlement","emp","settings"].indexOf(v)>=0)v="capture";
+    if(isMgr()&&["settlement","emp","members","settings"].indexOf(v)>=0)v="capture";
     view=v;
-    ["login","home","notice","capture","list","settlement","docs","emp","settings","field"].forEach(function(x){$("v-"+x).classList.toggle("hide",x!==v);});try{$("fldHome").classList.toggle("hide",!isStaff());}catch(e){}
+    ["login","home","notice","capture","list","settlement","docs","emp","members","settings","field"].forEach(function(x){$("v-"+x).classList.toggle("hide",x!==v);});try{$("fldHome").classList.toggle("hide",!isStaff());}catch(e){}
     if(v==="home")renderHome();
     if(v==="notice")renderNotices();
     document.querySelectorAll(".nav-btn").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-v")===v);});
@@ -857,6 +862,7 @@
     if(v==="list")renderList();
     if(v==="docs")renderDocs();
     if(v==="emp")renderEmp();
+    if(v==="members")renderMembers();
     if(v==="settlement")renderSettlement();
     if(v==="capture"){refreshKeyStatus();renderSiteInfo();renderDocCard();}
     if(v==="settings"){renderSecurity();try{renderSigAdmin();}catch(e){}$("s_url").value=cfg.url||"";$("s_name").value=cfg.name||"";$("s_company").value=cfg.company||"";$("s_site").value=buildings().join(", ");$("s_role1").value=ROLES.role1||"이사";$("s_role2").value=ROLES.role2||"감사";$("apiKey").value=cfg.apiKey||"";$("model").value=getModel();renderFixedSettings();}
@@ -1685,6 +1691,30 @@
   function scopedEmp(){return isAll()?employees.slice():employees.filter(function(x){return String(x.site||"")===curBuilding();});}
   function monthsAgoISO(n){var d=new Date();d.setMonth(d.getMonth()-n);return isoOf(d);}
   function empIsNew(x){return x.status!=="퇴사"&&x.joinDate&&x.joinDate>=monthsAgoISO(3);}
+  // ---- (11/5) 하단 메뉴 "일반회원" 화면 ----
+  function renderMembers(){
+    var body=$("memList");if(!body)return;
+    if(!haveUrl()){body.innerHTML='<div class="empty">서버에 연결되지 않았습니다.</div>';return;}
+    var list=scopedEmp().filter(function(x){return x.status!=="퇴사"&&x.status!=="입사예정"&&!OFF_RE.test(String(x.role||""));});
+    var nRef=list.filter(function(x){return x.referrer;}).length;
+    var html='<div class="hm-card" style="margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px"><div><b style="font-size:16px">🙋 일반회원 '+list.length+'명</b><div style="font-size:11.5px;color:#8A8278;margin-top:2px">임원 소개로 가입 '+nRef+'명 · 분야 소속 '+(list.length-nRef)+'명</div></div>'+(list.length?'<button class="fbtn up" id="memXls">📥 엑셀 내려받기</button>':'')+'</div>';
+    if(!list.length){html+='<div class="empty">일반회원이 없습니다.<br>회원 메뉴에서 임원 카드의 ＋ 회원 등록으로 추가하세요.</div>';}
+    else{
+      var own=list.filter(function(x){return !x.referrer;});
+      if(own.length)html+='<div class="eteam">분야 소속 회원 ('+own.length+'명)</div>'+own.map(empCard).join("");
+      var mg={},mo=[];list.forEach(function(x){if(!x.referrer)return;var k=x.refName||"소개자 미상";if(!mg[k]){mg[k]=[];mo.push(k);}mg[k].push(x);});
+      mo.forEach(function(k){html+='<div class="eteam">소개 '+esc(k)+' ('+mg[k].length+'명)</div>'+mg[k].map(empCard).join("");});
+    }
+    body.innerHTML=html;
+    [["data-eedit","data-meedit"],["data-eleave","data-meleave"],["data-edel","data-medel"],["data-erej","data-merej"]].forEach(function(p){
+      body.querySelectorAll("["+p[0]+"]").forEach(function(b){b.setAttribute(p[1],b.getAttribute(p[0]));b.removeAttribute(p[0]);});});
+    bindEmpCards(body);
+    body.querySelectorAll("[data-meedit]").forEach(function(b){b.addEventListener("click",function(){setView("emp");openEmpForm(b.getAttribute("data-meedit"));});});
+    body.querySelectorAll("[data-meleave]").forEach(function(b){b.addEventListener("click",function(){setView("emp");leaveEmp(b.getAttribute("data-meleave"));});});
+    body.querySelectorAll("[data-medel]").forEach(function(b){b.addEventListener("click",async function(){await delEmp(b.getAttribute("data-medel"));renderMembers();});});
+    body.querySelectorAll("[data-merej]").forEach(function(b){b.addEventListener("click",async function(){await rejoinEmp(b.getAttribute("data-merej"));renderMembers();});});
+    var mx=$("memXls");if(mx)mx.addEventListener("click",function(){memExport(list);});
+  }
   // ---- (11/5) 일반회원 명단 엑셀 ----
   function memExport(list){
     var yn=function(v){return v?"동의":"";};
@@ -1949,7 +1979,7 @@
           var res=await cloudPost({action:"empAdd",record:nr,keepAttachments:[],attachments:news});
           nr.id=res.id;nr.attachments=res.attachments||[];employees.push(nr);toast(name+"님을 등록했습니다");
         }
-        closeSheet();renderEmp();
+        closeSheet();if(view==="members")renderMembers();else renderEmp();
       }catch(e){er.textContent="실패: "+e.message;er.classList.remove("hide");btn.disabled=false;btn.textContent=x?"수정 저장":"등록하기";}
     });
   }
@@ -2266,7 +2296,7 @@
   // ==================== v9 역할 화면 · 로그인 ====================
   function applyRoleUI(){try{adbarShow(SESS);var hb=document.getElementById("homeBtn");if(hb)hb.textContent="⌂ 처음으로";}catch(e){}
     var r=role();
-    var show={admin:["capture","list","settlement","docs","emp","settings"],manager:["notice","capture","list","docs"],staff:[]}[r]||[];
+    var show={admin:["capture","list","settlement","docs","emp","members","settings"],manager:["notice","capture","list","docs"],staff:[]}[r]||[];
     document.querySelectorAll(".nav-btn").forEach(function(b){b.classList.toggle("hide",show.indexOf(b.getAttribute("data-v"))<0);});
     document.querySelector(".nav").classList.toggle("hide",!show.length);
     document.querySelector(".hdr").classList.toggle("hide",!r);
