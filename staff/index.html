@@ -586,6 +586,7 @@
     <div class="siteinfo" id="empFormsCard" style="margin-top:12px"></div>
     <div class="segbar" id="empSeg" style="margin-top:12px">
       <button data-e="active" class="on">현재 임원</button>
+      <button data-e="members">일반회원</button>
       <button data-e="joining">합류예정 임원</button>
       <button data-e="left">사퇴 임원</button>
     </div>
@@ -1684,13 +1685,28 @@
   function scopedEmp(){return isAll()?employees.slice():employees.filter(function(x){return String(x.site||"")===curBuilding();});}
   function monthsAgoISO(n){var d=new Date();d.setMonth(d.getMonth()-n);return isoOf(d);}
   function empIsNew(x){return x.status!=="퇴사"&&x.joinDate&&x.joinDate>=monthsAgoISO(3);}
+  // ---- (11/5) 일반회원 명단 엑셀 ----
+  function memExport(list){
+    var yn=function(v){return v?"동의":"";};
+    var data=list.map(function(x,i){var c=x.consent||{};return {"번호":i+1,"성명":x.name||"","회원구분":x.mtype||"일반회원","소개 임원":x.refName||"","소속":x.team||"","휴대전화":x.phone||"","이메일":x.email||"","주소":x.addr||"","직업·소속":x.job||"","생년월일":x.birth||"","성별":x.gender||"","반려동물":x.pet||"","신청일":x.applyDate||"","가입일":x.joinDate||"","개인정보 동의":yn(c.privacy),"회칙 서약":yn(c.rules),"안내 수신":yn(c.notice),"신청서 사진":(x.attachments||[]).length?"있음":"","메모":x.memo||""};});
+    var fn=("일반회원명단_"+todayISO()).replace(/[\\\/\?\*\[\]:]/g,"_");
+    if(window.XLSX){try{var ws=XLSX.utils.json_to_sheet(data);var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"일반회원");
+      if(APP){APP.saveFile(XLSX.write(wb,{bookType:"xlsx",type:"base64"}),fn+".xlsx","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");return;}
+      XLSX.writeFile(wb,fn+".xlsx");return;}catch(e){}}
+    var head=Object.keys(data[0]||{"성명":""});
+    var csv=head.join(",")+"\n"+data.map(function(r){return head.map(function(h){return '"'+String(r[h]==null?"":r[h]).replace(/"/g,'""')+'"';}).join(",");}).join("\n");
+    if(APP){APP.saveFile(btoa(unescape(encodeURIComponent("﻿"+csv))),fn+".csv","text/csv");return;}
+    var blob=new Blob(["﻿"+csv],{type:"text/csv;charset=utf-8;"});var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=fn+".csv";document.body.appendChild(a);a.click();setTimeout(function(){a.remove();},500);
+  }
   function renderEmpSummary(){
     var arr=scopedEmp();
-    var act=arr.filter(function(x){return x.status!=="퇴사"&&x.status!=="입사예정";});
+    var act=arr.filter(function(x){return x.status!=="퇴사"&&x.status!=="입사예정"&&OFF_RE.test(String(x.role||""));});
+    var memN=arr.filter(function(x){return x.status!=="퇴사"&&x.status!=="입사예정"&&!OFF_RE.test(String(x.role||""));}).length;
     var joinP=arr.filter(function(x){return x.status==="입사예정";}).length;
     var leaveP=arr.filter(function(x){return x.status==="퇴사";}).length;
     $("empSummary").innerHTML=
       '<div class="esc"><div class="n">'+act.length+'</div><div class="l">현재 임원</div></div>'
+      +'<div class="esc"><div class="n">'+memN+'</div><div class="l">일반회원</div></div>'
       +'<div class="esc"><div class="n" style="color:'+(joinP?'#2A2724':'inherit')+'">'+joinP+'</div><div class="l">합류 예정</div></div>'
       +'<div class="esc"><div class="n" style="color:'+(leaveP?'#B4661F':'inherit')+'">'+leaveP+'</div><div class="l">사퇴 임원</div></div>';
   }
@@ -1736,6 +1752,7 @@
       if(dup)rb.textContent="⟲ 중복 감지됨 — 명단 초기화로 바로잡기 (재직 17 + 퇴사 5)";
     }
     var nb=$("empNewBtn");
+    if(nb)nb.style.display=empSeg==="members"?"none":"";
     if(nb){nb.textContent = empSeg==="plan" ? "👥 퇴사 예정 등록 (회원 선택)" : (empSeg==="joining" ? "＋ 합류예정 임원 등록" : "＋ 임원 등록");}
     var body=$("empList");
     if(!haveUrl()){body.innerHTML="";return;}
@@ -1753,8 +1770,22 @@
       list=arr.filter(function(x){return x.status!=="퇴사"&&x.status!=="입사예정"&&x.leavePlan;}).sort(function(a,b){return String(a.leavePlan)<String(b.leavePlan)?-1:1;});
       if(!list.length){body.innerHTML='<div class="empty">퇴사 예정자가 없습니다.<br>사직서를 받으면 해당 회원의 ✏️수정에서 퇴사 예정일을 넣고 사직서를 첨부하세요.<br>예정일이 되면 자동으로 퇴사자 명단으로 이동합니다.</div>';return;}
       html=list.map(empCard).join("");
+    }else if(empSeg==="members"){
+      list=arr.filter(function(x){return x.status!=="퇴사"&&x.status!=="입사예정"&&!OFF_RE.test(String(x.role||""));});
+      var nRef=list.filter(function(x){return x.referrer;}).length;
+      html='<div class="hm-card" style="margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px"><div><b style="font-size:15px">일반회원 '+list.length+'명</b><div style="font-size:11.5px;color:#8A8278;margin-top:2px">임원 소개로 가입 '+nRef+'명 · 분야 소속 '+(list.length-nRef)+'명</div></div>'+(list.length?'<button class="fbtn up" id="memXls">📥 엑셀 내려받기</button>':'')+'</div>';
+      if(!list.length){html+='<div class="empty">일반회원이 없습니다.<br>현재 임원 탭에서 임원 카드의 ＋ 회원 등록으로 추가하세요.</div>';}
+      else{
+        var own=list.filter(function(x){return !x.referrer;});
+        if(own.length)html+='<div class="eteam">분야 소속 회원 ('+own.length+'명)</div>'+own.map(empCard).join("");
+        var mg={},mo=[];list.forEach(function(x){if(!x.referrer)return;var k=x.refName||"소개자 미상";if(!mg[k]){mg[k]=[];mo.push(k);}mg[k].push(x);});
+        mo.forEach(function(k){html+='<div class="eteam">소개 '+esc(k)+' ('+mg[k].length+'명)</div>'+mg[k].map(empCard).join("");});
+      }
+      body.innerHTML=html;bindEmpCards(body);
+      var mx=$("memXls");if(mx)mx.addEventListener("click",function(){memExport(list);});
+      return;
     }else{
-      list=arr.filter(function(x){return x.status!=="퇴사"&&x.status!=="입사예정";});
+      list=arr.filter(function(x){return x.status!=="퇴사"&&x.status!=="입사예정"&&OFF_RE.test(String(x.role||""));});
       if(!list.length){
         body.innerHTML='<div class="empty">등록된 회원이 없습니다.<br>＋ 임원 등록으로 추가하세요.</div>'+(curBuilding()==="__KMPFA_NONE__"?'<button class="mini" id="empSeedBtn">📥 __KMPFA_NONE__ 명단 불러오기 (재직 17명 + 퇴사 5명)</button>':'');
         var sb=$("empSeedBtn");if(sb)sb.addEventListener("click",seedEmployees);
