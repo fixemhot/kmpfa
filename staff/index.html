@@ -484,7 +484,7 @@
         <button class="mini" id="uploadBtn" style="margin-top:0">📎 파일 첨부</button>
         <button class="mini" id="manualBtn" style="margin-top:0">✏️ 직접 입력</button>
       </div>
-      <button class="mini" id="fixedBtn" style="margin-top:10px">🏢 이번 달 고정비 한 번에 입력</button>
+      <button class="mini" id="fixedBtn" style="margin-top:10px;display:none">🏢 이번 달 고정비 한 번에 입력</button>
       <div class="keyhint" id="keyStatus"></div>
       <div class="siteinfo" id="siteInfoCard"></div>
       <div class="siteinfo" id="docCard"></div>
@@ -666,7 +666,7 @@
       <div class="btns"><button class="btn primary" id="saveInfoBtn">저장</button></div>
       <div class="ok hide" id="infoSaved" style="margin-top:10px">저장되었습니다.</div>
     </div>
-    <div class="setrow">
+    <div class="setrow" style="display:none">
       <h3>고정비 항목 관리</h3>
       <p>전기요금·수도요금·임대료·통신비처럼 매달 나가는 항목을 등록해 두면, 입력 탭의 "이번 달 고정비" 버튼으로 한 번에 넣을 수 있습니다. 매달 바뀌는 금액은 입력할 때 수정하면 됩니다.</p>
       <div id="fixedList"></div>
