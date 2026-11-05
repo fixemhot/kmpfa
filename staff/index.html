@@ -1835,6 +1835,12 @@
     var mt=(x&&x.mtype)||"일반회원";
     openSheet('<h3>'+(x?'회원 정보 수정':'일반회원 등록')+'</h3>'
       +'<div style="font-size:12px;color:#8A8278;margin:-4px 0 10px">소개 임원: <b style="color:#5E4A34">'+esc((ref.name||(x&&x.refName)||"")+" "+(ref.role||""))+'</b></div>'
+      +'<div class="field" style="background:#F5F2EB;border:1px solid #E2DCD0;border-radius:12px;padding:10px 10px 8px"><label>📄 회원가입신청서 사진</label>'
+      +'<div class="twobtn" style="margin-top:2px"><button type="button" class="mini" id="rc_cam" style="margin-top:0">📷 촬영해서 올리기</button><button type="button" class="mini" id="rc_pick" style="margin-top:0">🖼 사진·파일 선택</button></div>'
+      +'<label style="display:flex;align-items:center;gap:8px;font-weight:400;margin:8px 0 2px;font-size:12.5px;color:#2A2724"><input type="checkbox" id="rc_enh" checked style="width:18px;height:18px;margin:0;flex:none;padding:0"> 문서처럼 보정 (흑백·선명하게, 용량 줄이기)</label>'
+      +'<div id="rc_thumbs" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px"></div>'
+      +((x&&(x.attachments||[]).length)?'<div style="font-size:12px;color:#6B645A;margin-top:6px">이미 저장된 사진: '+(x.attachments||[]).map(function(a){return esc(a.name);}).join(", ")+'</div>':'')
+      +'<input type="file" id="rc_camin" accept="image/*" capture="environment" style="display:none"><input type="file" id="rc_file" accept="image/*,application/pdf" multiple style="display:none"></div>'
       +'<div class="row2"><div class="field"><label>성명 *</label><input type="text" id="rc_name" value="'+v("name")+'" placeholder="홍길동"></div>'
       +'<div class="field"><label>회원 구분</label><select id="rc_mtype">'+["일반회원","특별회원","임원(후보)"].map(function(o){return '<option'+(o===mt?' selected':'')+'>'+o+'</option>';}).join("")+'</select></div></div>'
       +'<div class="row2"><div class="field"><label>생년월일 6자리</label><input type="text" id="rc_birth" inputmode="numeric" maxlength="6" value="'+v("birth")+'" placeholder="671030"></div>'
@@ -1851,22 +1857,24 @@
       +'<label style="display:flex;align-items:center;gap:8px;font-weight:400;margin:6px 0;font-size:13px;color:#2A2724"><input type="checkbox" style="width:18px;height:18px;margin:0;flex:none;padding:0" id="rc_c2"'+(x?(cs.rules?' checked':''):' checked')+'> 회칙 준수 서약</label>'
       +'<label style="display:flex;align-items:center;gap:8px;font-weight:400;margin:6px 0;font-size:13px;color:#2A2724"><input type="checkbox" style="width:18px;height:18px;margin:0;flex:none;padding:0" id="rc_c3"'+(x?(cs.notice?' checked':''):' checked')+'> 문자·이메일 안내 수신 동의</label></div>'
       +'<div class="field"><label>메모</label><input type="text" id="rc_memo" value="'+v("memo")+'"></div>'
-      +'<div class="field"><label>회원가입신청서 사진 <small style="color:#868C94;font-weight:400">(여러 장 가능)</small></label>'
-      +((x&&(x.attachments||[]).length)?'<div style="font-size:12px;color:#6B645A;margin-bottom:6px">📎 '+(x.attachments||[]).map(function(a){return esc(a.name);}).join(", ")+'</div>':'')
-      +'<input type="file" id="rc_file" accept="image/*,application/pdf" multiple></div>'
       +'<div class="err hide" id="rc_err"></div>'
       +'<div class="btns" style="margin-top:12px"><button class="btn ghost" id="rc_cancel">취소</button><button class="btn primary" id="rc_save">'+(x?'수정 저장':'등록하기')+'</button></div>');
     $("rc_cancel").addEventListener("click",closeSheet);
+    var picks=[];
+    function rcThumbs(){var el=$("rc_thumbs");if(!el)return;el.innerHTML=picks.map(function(p,i){return '<div style="position:relative;width:72px;height:92px;border:1px solid #CFC7B8;border-radius:8px;overflow:hidden;background:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;color:#6B645A;text-align:center">'+(/^image\//.test(p.type)?'<img src="'+p.dataUrl+'" style="width:100%;height:100%;object-fit:cover">':'📄<br>'+esc(p.orig))+'<button type="button" data-rcx="'+i+'" style="position:absolute;top:2px;right:2px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;font-size:13px;line-height:22px;padding:0">×</button></div>';}).join("");el.querySelectorAll("[data-rcx]").forEach(function(b){b.addEventListener("click",function(){picks.splice(Number(b.getAttribute("data-rcx")),1);rcThumbs();});});}
+    function rcScan(file,enh){return new Promise(function(res){var u=URL.createObjectURL(file);var im=new Image();im.onload=function(){var m=1800,w=im.naturalWidth,h=im.naturalHeight,k=Math.min(1,m/Math.max(w,h));w=Math.round(w*k);h=Math.round(h*k);var c=document.createElement("canvas");c.width=w;c.height=h;var g=c.getContext("2d");g.fillStyle="#fff";g.fillRect(0,0,w,h);g.drawImage(im,0,0,w,h);if(enh){var d=g.getImageData(0,0,w,h),p=d.data,hist=new Array(256).fill(0),i;for(i=0;i<p.length;i+=4){var y=Math.round(.299*p[i]+.587*p[i+1]+.114*p[i+2]);p[i]=y;hist[y]++;}var tot=w*h,lo,hi,acc=0;for(lo=0;lo<255;lo++){acc+=hist[lo];if(acc>tot*.02)break;}acc=0;for(hi=255;hi>0;hi--){acc+=hist[hi];if(acc>tot*.12)break;}if(hi<=lo+20){lo=0;hi=255;}var sc=255/(hi-lo);for(i=0;i<p.length;i+=4){var v=(p[i]-lo)*sc;v=v<0?0:(v>255?255:v);p[i]=p[i+1]=p[i+2]=v;}g.putImageData(d,0,0);}URL.revokeObjectURL(u);res(c.toDataURL("image/jpeg",.85));};im.onerror=function(){URL.revokeObjectURL(u);res(null);};im.src=u;});}
+    async function rcAdd(files){var enh=$("rc_enh").checked;for(var i=0;i<files.length;i++){var f=files[i];if(/^image\//.test(f.type)){var du=await rcScan(f,enh);if(du){picks.push({orig:f.name,type:"image/jpeg",ext:".jpg",dataUrl:du});continue;}}if(f.size>10*1024*1024){toast(f.name+": 10MB가 넘어 뺐습니다");continue;}var a=await readFile(f);if(a)picks.push({orig:f.name,type:f.type||"application/octet-stream",ext:((/\.[A-Za-z0-9]+$/.exec(f.name)||[".pdf"])[0]),dataUrl:a.dataUrl});}rcThumbs();}
+    $("rc_cam").addEventListener("click",function(){$("rc_camin").click();});
+    $("rc_pick").addEventListener("click",function(){$("rc_file").click();});
+    ["rc_camin","rc_file"].forEach(function(id){$(id).addEventListener("change",function(e){var fs=Array.prototype.slice.call(e.target.files||[]);e.target.value="";rcAdd(fs);});});
     $("rc_save").addEventListener("click",async function(){
       var btn=this,er=$("rc_err");er.classList.add("hide");
       var name=$("rc_name").value.trim();
       if(!name){er.textContent="성명을 입력해 주세요.";er.classList.remove("hide");return;}
       if(!$("rc_c1").checked){er.textContent="개인정보 수집·이용에 동의해야 가입할 수 있습니다.";er.classList.remove("hide");return;}
-      var fs=Array.prototype.slice.call($("rc_file").files||[]);
-      if(fs.some(function(f){return f.size>10*1024*1024;})){er.textContent="10MB가 넘는 파일이 있습니다.";er.classList.remove("hide");return;}
       btn.disabled=true;btn.textContent="저장 중…";
       try{
-        var news=[];for(var i=0;i<fs.length;i++){var a=await readFile(fs[i]);if(a)news.push({name:name+"_회원가입신청서"+(fs.length>1?"_"+(i+1):"")+((/\.[A-Za-z0-9]+$/.exec(fs[i].name)||[".jpg"])[0]),type:fs[i].type||"image/jpeg",dataB64:String(a.dataUrl).split(",")[1]});}
+        var base0=(x&&(x.attachments||[]).length)||0;var news=picks.map(function(p,i){var n=base0+i+1;return {name:name+"_회원가입신청서"+((picks.length>1||base0)?"_"+n:"")+p.ext,type:p.type,dataB64:String(p.dataUrl).split(",")[1]};});
         var petv=$("rc_pet").value==="있음"?("있음 "+$("rc_petd").value.trim()).trim():"없음";
         var f={name:name,mtype:$("rc_mtype").value,birth:$("rc_birth").value.replace(/[^0-9]/g,"").slice(0,6),gender:$("rc_gender").value,
           phone:$("rc_phone").value.trim(),email:$("rc_email").value.trim(),addr:$("rc_addr").value.trim(),job:$("rc_job").value.trim(),pet:petv,
