@@ -709,14 +709,14 @@
   </div>
 
   <div class="nav">
-    <button class="nav-btn on" data-v="capture"><span class="navic">📷</span>입력</button>
+    <button class="nav-btn on" data-v="emp"><span class="navic">👥</span>회원</button>
+    <button class="nav-btn" data-v="docs"><span class="navic">📄</span>문서</button>
+    <button class="nav-btn hide" data-v="notice"><span class="navic">📢</span>공지</button>
+    <button class="nav-btn" data-v="capture"><span class="navic">📷</span>입력</button>
     <button class="nav-btn" data-v="list"><span class="navic">📋</span>내역</button>
     <button class="nav-btn" data-v="settlement"><span class="navic">🧾</span>결산</button>
-    <button class="nav-btn" data-v="docs"><span class="navic">📄</span>문서</button>
     <button class="nav-btn" data-v="field"><span class="navic">🛠️</span>현장</button>
-    <button class="nav-btn" data-v="emp"><span class="navic">👥</span>회원</button>
     <button class="nav-btn" data-v="settings"><span class="navic">⚙️</span>설정</button>
-    <button class="nav-btn hide" data-v="notice"><span class="navic">📢</span>공지</button>
   </div>
 </div>
 
@@ -842,7 +842,7 @@
 
   // ---------- nav ----------
   function setView(v){
-    if(!role())v="login"; else if(isStaff()){if(v!=="field")v="home";} else if(v==="login"||v==="home")v="capture";
+    if(!role())v="login"; else if(isStaff()){if(v!=="field")v="home";} else if(v==="login"||v==="home")v=isMgr()?"capture":"emp";
     try{document.querySelector(".app").classList.toggle("on-login",v==="login");document.body.classList.toggle("on-login",v==="login");}catch(e){}
     if(isMgr()&&["settlement","emp","settings"].indexOf(v)>=0)v="capture";
     view=v;
@@ -2163,7 +2163,7 @@
             $("lgPin").value="";$("lgPin2").value="";$("lgBirth").value="";
       try{await cloudPull();}catch(e){}
       applyRoleUI();renderSiteInfo();renderDocCard();
-      setView(isStaff()?"home":(isMgr()?"notice":"capture"));
+      setView(isStaff()?"home":(isMgr()?"notice":"emp"));
       toast((r.name||"")+"님 환영합니다");
     }catch(e){
       var m=String(e.message||e);
@@ -2701,7 +2701,7 @@
     if(!$("docForm").classList.contains("hide")){closeDocForm();return true;}
     if(!$("empForm").classList.contains("hide")){closeEmpForm();return true;}
     if(!role()&&!$("lgForm").classList.contains("hide")){$("lgBack").click();return true;}
-    var homeV=isStaff()?"home":(role()?"capture":"login");
+    var homeV=isStaff()?"home":(role()?(isMgr()?"capture":"emp"):"login");
     if(view!==homeV){setView(homeV);return true;}
     return false;
   }
@@ -2729,7 +2729,7 @@
     }
     applyRoleUI();renderSiteInfo();renderDocCard();
     try{$("lgTest").classList.toggle("hide",!testMode);}catch(e){}
-    setView(isStaff()?"home":(role()?"capture":"login"));try{if(BOOT&&BOOT.menu==="pro"){setView("login");var hp=document.getElementById("hubPro");if(hp)hp.click();}}catch(e){}
+    setView(isStaff()?"home":(role()?(isMgr()?"capture":"emp"):"login"));try{if(BOOT&&BOOT.menu==="pro"){setView("login");var hp=document.getElementById("hubPro");if(hp)hp.click();}}catch(e){}
     if(BOOT&&BOOT.embed&&BOOT.v&&role()){try{setView(BOOT.v);}catch(e){}}
     if(APP){try{APP.ready();}catch(e){}}
     if(bgPull){
