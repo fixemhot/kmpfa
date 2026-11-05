@@ -1839,6 +1839,7 @@
       +'<div class="twobtn" style="margin-top:2px"><button type="button" class="mini" id="rc_cam" style="margin-top:0">📷 촬영해서 올리기</button><button type="button" class="mini" id="rc_pick" style="margin-top:0">🖼 사진·파일 선택</button></div>'
       +'<label style="display:flex;align-items:center;gap:8px;font-weight:400;margin:8px 0 2px;font-size:12.5px;color:#2A2724"><input type="checkbox" id="rc_enh" checked style="width:18px;height:18px;margin:0;flex:none;padding:0"> 문서처럼 보정 (흑백·선명하게, 용량 줄이기)</label>'
       +'<div id="rc_thumbs" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px"></div>'
+      +'<div id="rc_ocr" style="font-size:12px;color:#5E4A34;margin-top:6px;line-height:1.5">'+(x?'':'📷 신청서를 찍으면 글자를 읽어 아래 칸을 자동으로 채웁니다.')+'</div>'
       +((x&&(x.attachments||[]).length)?'<div style="font-size:12px;color:#6B645A;margin-top:6px">이미 저장된 사진: '+(x.attachments||[]).map(function(a){return esc(a.name);}).join(", ")+'</div>':'')
       +'<input type="file" id="rc_camin" accept="image/*" capture="environment" style="display:none"><input type="file" id="rc_file" accept="image/*,application/pdf" multiple style="display:none"></div>'
       +'<div class="row2"><div class="field"><label>성명 *</label><input type="text" id="rc_name" value="'+v("name")+'" placeholder="홍길동"></div>'
@@ -1863,7 +1864,32 @@
     var picks=[];
     function rcThumbs(){var el=$("rc_thumbs");if(!el)return;el.innerHTML=picks.map(function(p,i){return '<div style="position:relative;width:72px;height:92px;border:1px solid #CFC7B8;border-radius:8px;overflow:hidden;background:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;color:#6B645A;text-align:center">'+(/^image\//.test(p.type)?'<img src="'+p.dataUrl+'" style="width:100%;height:100%;object-fit:cover">':'📄<br>'+esc(p.orig))+'<button type="button" data-rcx="'+i+'" style="position:absolute;top:2px;right:2px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;font-size:13px;line-height:22px;padding:0">×</button></div>';}).join("");el.querySelectorAll("[data-rcx]").forEach(function(b){b.addEventListener("click",function(){picks.splice(Number(b.getAttribute("data-rcx")),1);rcThumbs();});});}
     function rcScan(file,enh){return new Promise(function(res){var u=URL.createObjectURL(file);var im=new Image();im.onload=function(){var m=1800,w=im.naturalWidth,h=im.naturalHeight,k=Math.min(1,m/Math.max(w,h));w=Math.round(w*k);h=Math.round(h*k);var c=document.createElement("canvas");c.width=w;c.height=h;var g=c.getContext("2d");g.fillStyle="#fff";g.fillRect(0,0,w,h);g.drawImage(im,0,0,w,h);if(enh){var d=g.getImageData(0,0,w,h),p=d.data,hist=new Array(256).fill(0),i;for(i=0;i<p.length;i+=4){var y=Math.round(.299*p[i]+.587*p[i+1]+.114*p[i+2]);p[i]=y;hist[y]++;}var tot=w*h,lo,hi,acc=0;for(lo=0;lo<255;lo++){acc+=hist[lo];if(acc>tot*.02)break;}acc=0;for(hi=255;hi>0;hi--){acc+=hist[hi];if(acc>tot*.12)break;}if(hi<=lo+20){lo=0;hi=255;}var sc=255/(hi-lo);for(i=0;i<p.length;i+=4){var v=(p[i]-lo)*sc;v=v<0?0:(v>255?255:v);p[i]=p[i+1]=p[i+2]=v;}g.putImageData(d,0,0);}URL.revokeObjectURL(u);res(c.toDataURL("image/jpeg",.85));};im.onerror=function(){URL.revokeObjectURL(u);res(null);};im.src=u;});}
-    async function rcAdd(files){var enh=$("rc_enh").checked;for(var i=0;i<files.length;i++){var f=files[i];if(/^image\//.test(f.type)){var du=await rcScan(f,enh);if(du){picks.push({orig:f.name,type:"image/jpeg",ext:".jpg",dataUrl:du});continue;}}if(f.size>10*1024*1024){toast(f.name+": 10MB가 넘어 뺐습니다");continue;}var a=await readFile(f);if(a)picks.push({orig:f.name,type:f.type||"application/octet-stream",ext:((/\.[A-Za-z0-9]+$/.exec(f.name)||[".pdf"])[0]),dataUrl:a.dataUrl});}rcThumbs();}
+    async function rcAdd(files){var enh=$("rc_enh").checked;for(var i=0;i<files.length;i++){var f=files[i];if(/^image\//.test(f.type)){var du=await rcScan(f,enh);if(du){picks.push({orig:f.name,type:"image/jpeg",ext:".jpg",dataUrl:du});continue;}}if(f.size>10*1024*1024){toast(f.name+": 10MB가 넘어 뺐습니다");continue;}var a=await readFile(f);if(a)picks.push({orig:f.name,type:f.type||"application/octet-stream",ext:((/\.[A-Za-z0-9]+$/.exec(f.name)||[".pdf"])[0]),dataUrl:a.dataUrl});}rcThumbs();var fi=picks.filter(function(p){return /^image\//.test(p.type);})[0];if(fi&&!ocrRan&&!x)rcOcr(fi.dataUrl,false);}
+    var ocrRan=false;
+    var RC_MAP={name:["rc_name","성명"],birth:["rc_birth","생년월일"],gender:["rc_gender","성별"],phone:["rc_phone","휴대전화"],email:["rc_email","이메일"],addr:["rc_addr","주소"],job:["rc_job","직업·소속"],pet:["rc_pet","반려동물"],petd:["rc_petd","종류·마릿수"],mtype:["rc_mtype","회원 구분"],date:["rc_apply","신청일"]};
+    function rcFill(f,force){
+      Object.keys(RC_MAP).forEach(function(k){var el=$(RC_MAP[k][0]),v=f[k];if(!el||v==null||v==="")return;
+        if(el.tagName==="SELECT"){if([].some.call(el.options,function(o){return o.value===v;}))el.value=v;return;}
+        if(force||!el.value.trim())el.value=v;});
+      if(f.privacy)$("rc_c1").checked=true;if(f.rules)$("rc_c2").checked=true;if(typeof f.notice==="boolean")$("rc_c3").checked=f.notice;
+      var pth=[f.path,f.referrer?("소개자 "+f.referrer):""].filter(Boolean).join(" · ");if(pth&&(force||!$("rc_memo").value.trim()))$("rc_memo").value="가입 경로: "+pth;
+      Object.keys(RC_MAP).forEach(function(k){var el=$(RC_MAP[k][0]);if(el){el.style.borderColor="";el.style.background="";}});
+      var un=(f.unsure||[]).filter(function(k){return RC_MAP[k];});
+      un.forEach(function(k){var el=$(RC_MAP[k][0]);if(el){el.style.borderColor="#E8A33D";el.style.background="#FFF8EC";}});
+      return un.map(function(k){return RC_MAP[k][1];});
+    }
+    async function rcOcr(du,force){
+      var st=$("rc_ocr");if(!st)return;ocrRan=true;
+      st.innerHTML='🔍 신청서 글자를 읽는 중… (10초 정도)';
+      try{
+        var r=await cloudPost({action:"formRead",image:du,type:"image/jpeg"});
+        var un=rcFill(r.form||{},force);
+        st.innerHTML='✅ 사진에서 읽은 내용으로 칸을 채웠습니다. 맞는지 꼭 확인하세요.'+(un.length?'<br><b style="color:#B4661F">확인 필요: '+esc(un.join(", "))+'</b> (주황색 칸)':'')+' <a id="rc_reocr" style="text-decoration:underline;cursor:pointer;margin-left:4px">다시 읽기</a>';
+      }catch(e){
+        st.innerHTML=(/AI 키|ANTHROPIC/.test(e.message)?'ℹ️ 자동 입력이 아직 꺼져 있습니다. 서버에 AI 키를 등록하면 사진만 찍어도 칸이 채워집니다. 지금은 직접 입력해 주세요.':'⚠️ 글자를 읽지 못했습니다: '+esc(e.message))+' <a id="rc_reocr" style="text-decoration:underline;cursor:pointer;margin-left:4px">다시 시도</a>';
+      }
+      var ro=$("rc_reocr");if(ro)ro.addEventListener("click",function(){var fi=picks.filter(function(p){return /^image\//.test(p.type);})[0];if(fi)rcOcr(fi.dataUrl,true);});
+    }
     $("rc_cam").addEventListener("click",function(){$("rc_camin").click();});
     $("rc_pick").addEventListener("click",function(){$("rc_file").click();});
     ["rc_camin","rc_file"].forEach(function(id){$(id).addEventListener("change",function(e){var fs=Array.prototype.slice.call(e.target.files||[]);e.target.value="";rcAdd(fs);});});
