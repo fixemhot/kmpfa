@@ -1719,7 +1719,7 @@
     function chip(x,tag){
       var ph=String(x.phone||"").replace(/[^\d]/g,"");
       var t=tag?'<i>'+esc(tag)+'</i>':'';
-      return ph?'<a class="kp" href="tel:'+ph+'" title="'+esc(x.phone)+'"><b>'+esc(x.name)+'</b>'+t+'<span class="kc">📞</span></a>'
+      return ph?'<a class="kp" href="tel:'+ph+'" title="'+esc(x.phone)+'"><b>'+esc(x.name)+'</b>'+t+'</a>'
                :'<span class="kp nop" title="연락처 미등록"><b>'+esc(x.name)+'</b>'+t+'</span>';
     }
     function box(title,people,cls){
