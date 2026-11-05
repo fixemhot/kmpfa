@@ -582,34 +582,25 @@
         <div class="field"><label>직책</label><input type="text" id="e_role" placeholder="이사 / 감사 / 사무국장 / 회원" /></div>
       </div>
       <div class="row2">
-        <div class="field"><label>소속</label><select id="e_team"><option>사무국</option><option>현장팀</option><option>협력팀</option><option>기타</option></select></div>
-        <div class="field"><label>근무형태</label><select id="e_work"><option>일근</option><option>3교대(주당비)</option><option>2교대(주야)</option><option>격일(당비)</option><option>기타</option></select></div>
-      </div>
-      <div class="row2">
+        <div class="field"><label>소속</label><select id="e_team"><option>사무국</option><option>기획</option><option>행정·총무</option><option>대외협력·청원</option><option>언론·프레스</option><option>교육·민간자격</option><option>기타</option></select></div>
         <div class="field"><label>성별</label><select id="e_gender"><option>남</option><option>여</option></select></div>
+      </div>
+      <div class="row2">
         <div class="field"><label>휴대폰 번호 <small style="color:#868C94;font-weight:400">(뒷자리 4자리 = 로그인 비밀번호)</small></label><input type="tel" id="e_phone" placeholder="010-0000-0000" /></div>
+        <div class="field"><label>가입일</label><input type="date" id="e_join" /></div>
       </div>
       <div class="row2">
-        <div class="field"><label>입사일</label><input type="date" id="e_join" /></div>
         <div class="field"><label>상태</label><select id="e_status"><option>재직</option><option>입사예정</option><option>퇴사</option></select></div>
-      </div>
-      <div class="row2">
         <div class="field"><label>생년월일 6자리</label><input type="text" id="e_birth" inputmode="numeric" maxlength="6" placeholder="620901" /></div>
-        <div class="field"><label>부양가족 수 (본인 포함)</label><input type="text" id="e_deps" inputmode="numeric" placeholder="1" /></div>
       </div>
       <div class="field hide" id="e_leaveWrap"><label>퇴사일</label><input type="date" id="e_leave" /></div>
       <div class="field"><label>퇴사 예정일 (사직서 접수 시 입력 — 날짜가 되면 자동으로 퇴사자 명단으로 이동)</label><input type="date" id="e_leavePlan" /></div>
-      <div class="field"><label>보유자격증</label><input type="text" id="e_certs" placeholder="전기기사, 소방설비기사 …" /></div>
-      <div class="row2">
-        <div class="field"><label>기본급</label><input type="text" id="e_base" inputmode="numeric" placeholder="0" /></div>
-        <div class="field"><label>제수당</label><input type="text" id="e_allow" inputmode="numeric" placeholder="0" /></div>
+      <div style="display:none" aria-hidden="true">
+        <select id="e_work"><option>일근</option><option>3교대(주당비)</option><option>2교대(주야)</option><option>격일(당비)</option><option>기타</option></select>
+        <input type="text" id="e_deps" /><input type="text" id="e_certs" />
+        <input type="text" id="e_base" placeholder="0" /><input type="text" id="e_allow" placeholder="0" /><input type="text" id="e_ot" placeholder="0" /><input type="text" id="e_annual" placeholder="0" /><input type="text" id="e_sev" placeholder="0" />
+        <b id="e_paySum">0</b><b id="e_total">0</b>
       </div>
-      <div class="row2">
-        <div class="field"><label>연장·심야</label><input type="text" id="e_ot" inputmode="numeric" placeholder="0" /></div>
-        <div class="field"><label>연차수당</label><input type="text" id="e_annual" inputmode="numeric" placeholder="0" /></div>
-      </div>
-      <div class="field"><label>퇴직충당금</label><input type="text" id="e_sev" inputmode="numeric" placeholder="0" /></div>
-      <div class="totrow">급여계 <b id="e_paySum">0</b> · 총계 <b id="e_total">0</b> 원</div>
       <div class="attach">
         <div class="alabel">서류 첨부 (이력서·근로계약서·사직서 등)</div>
         <div id="empAttachList"></div>
@@ -1775,7 +1766,7 @@
     empEditingId=id||null;
     var x=id?employees.filter(function(e){return String(e.id)===String(id);})[0]:null;
     $("e_name").value=x?x.name:"";$("e_role").value=x?(x.role||""):"";
-    $("e_team").value=x&&x.team?x.team:"사무국";$("e_work").value=x&&x.work?x.work:"일근";
+    (function(v){var sl=$("e_team");if(v&&![].some.call(sl.options,function(o){return o.value===v;})){var op=document.createElement("option");op.textContent=v;sl.appendChild(op);}sl.value=v;})(x&&x.team?x.team:"사무국");$("e_work").value=x&&x.work?x.work:"일근";
     $("e_gender").value=x&&x.gender?x.gender:"남";$("e_phone").value=x?(x.phone||""):"";
     $("e_join").value=x?(x.joinDate||""):"";$("e_status").value=x?(x.status||"재직"):"재직";
     $("e_leave").value=x?(x.leaveDate||""):"";
