@@ -1678,8 +1678,10 @@
         var sb=$("empSeedBtn");if(sb)sb.addEventListener("click",seedEmployees);
         return;
       }
-      var teams={};var order=["사무국","현장팀","협력팀","기타"];
-      list.forEach(function(x){var t=x.team||"기타";(teams[t]=teams[t]||[]).push(x);});
+      var teams={};var order=["대표","사무국","기획","행정·총무","대외협력·청원","언론·프레스","교육·민간자격","기타"];
+      list.forEach(function(x){var t=x.team&&x.team!=="-"?x.team:(/대표|회장/.test(String(x.role||""))?"대표":"기타");(teams[t]=teams[t]||[]).push(x);});
+      var rk2=function(x){var r=String(x.role||"");return /대표|회장/.test(r)?4:(/사무국장/.test(r)?3:(/감사/.test(r)?2:(/이사/.test(r)?1:0)));};
+      Object.keys(teams).forEach(function(t){var a=teams[t];teams[t]=a.map(function(x,i){return [x,i];}).sort(function(p,q){return rk2(q[0])-rk2(p[0])||p[1]-q[1];}).map(function(p){return p[0];});});
       order.concat(Object.keys(teams).filter(function(t){return order.indexOf(t)<0;})).forEach(function(t){
         if(!teams[t])return;
         html+='<div class="eteam">'+esc(t)+' ('+teams[t].length+'명)</div>'+teams[t].map(empCard).join("");
@@ -1918,7 +1920,7 @@
   function openLeavePlanPicker(){
     var act=scopedEmp().filter(function(x){return x.status!=="퇴사"&&x.status!=="입사예정";});
     if(!act.length){toast("재직 중인 회원이 없습니다");return;}
-    var order=["사무국","현장팀","협력팀"];
+    var order=["대표","사무국","기획","행정·총무","대외협력·청원","언론·프레스","교육·민간자격","기타"];
     act.sort(function(a,b){var t=order.indexOf(a.team||"기타")-order.indexOf(b.team||"기타");return t||String(a.name).localeCompare(String(b.name),"ko");});
     var list=act.map(function(x){
       var plan=x.leavePlan?' <span style="font-size:10px;color:#B4453A;font-weight:700">퇴사 예정 '+fmtK(x.leavePlan)+'</span>':'';
@@ -2277,7 +2279,7 @@
     if(isAll()){toast("공지를 보낼 지부를 먼저 선택하세요");openBuildingSheet();return;}
     var act=employees.filter(function(x){return x.status!=="퇴사"&&x.status!=="입사예정"&&String(x.site||"__KMPFA_NONE__")===curBuilding();});
     var opts='<option value="all">전체 (일반회원 + 임원)</option><option value="mgr">임원만</option>'
-      +["사무국","현장팀","협력팀"].map(function(t){return '<option value="team:'+t+'">'+t+'만</option>';}).join("")
+      +["사무국","기획","행정·총무","대외협력·청원","언론·프레스","교육·민간자격"].map(function(t){return '<option value="team:'+t+'">'+t+'만</option>';}).join("")
       +act.map(function(x){return '<option value="emp:'+esc(x.id)+'">'+esc(x.name)+' (개인)</option>';}).join("");
     openSheet('<h3>📢 공지 보내기 · '+esc(curBuilding())+'</h3><div class="field"><label>받는 사람</label><select id="ntTo">'+opts+'</select></div>'
       +'<div class="field"><label>제목</label><input id="ntTitle" placeholder="예) 10월 소방훈련 안내"></div>'
