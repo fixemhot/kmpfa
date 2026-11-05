@@ -367,6 +367,13 @@
   .ko .kt{background:#fff;border:1px solid #DCD4C6;border-radius:10px;padding:8px 6px 9px;display:flex;flex-direction:column;gap:5px;align-items:stretch;text-align:center;}
   .ko .kt .kp{justify-content:center;border-radius:8px;}
   .ko .ktn{font-size:13px;font-weight:800;color:#5E4A34;margin-bottom:1px;}
+  .lib-cat{font-size:12.5px;font-weight:800;color:#5E4A34;margin:12px 0 4px;padding-bottom:4px;border-bottom:1px solid #EEE7DC;}
+  .lib-cat span{font-weight:500;color:#9A9288;font-size:11px;}
+  .lib-row{display:flex;align-items:center;gap:6px;padding:8px 0;border-bottom:1px dashed #EEE7DC;}
+  .lib-a{flex:1;min-width:0;color:#2A2724;font-weight:600;font-size:13.5px;text-decoration:underline;text-decoration-color:#CFC7B8;cursor:pointer;overflow-wrap:anywhere;}
+  .lib-b{font-size:10px;font-weight:700;color:#7A6247;background:#F5F2EB;border:1px solid #E2DCD0;border-radius:6px;padding:1px 6px;white-space:nowrap;}
+  .lib-d{font-size:11px;color:#9A9288;white-space:nowrap;}
+  .lib-row .fbtn{padding:4px 7px;font-size:11px;}
   .fbtn{border:1px solid #D8D5C8;background:#F4F3EE;border-radius:8px;padding:6px 10px;font-size:11.5px;font-weight:700;color:#1C2A27;cursor:pointer;font-family:inherit;text-decoration:none;white-space:nowrap;}
   .fbtn.up{background:#2A2724;color:#fff;border-color:#2A2724;}
   .fbtn.warn{color:#9A3327;}
@@ -439,6 +446,7 @@
   <div id="v-home" class="wrap hide">
     <div class="hm-hello"><img class="hm-logo" src="" data-logo="1" alt="한국반려동물이동장례협회"><div><div class="hm-n" id="hmName"></div><div class="hm-s" id="hmSub"></div></div></div>
     <div class="hm-card" id="hmNotice"></div>
+    <div class="hm-card" id="hmLib" style="display:none"></div>
     <div class="hm-card" id="hmPay"></div>
     <div class="hm-card" id="hmDraft"></div>
     <div class="hm-card" id="hmDocs"></div>
@@ -537,6 +545,7 @@
 
   <!-- 문서 -->
   <div id="v-docs" class="wrap hide">
+    <div class="hm-card" id="libCard" style="margin-bottom:12px"></div>
     <div id="noUrl4" class="banner hide">공유 서버가 연결되지 않아 문서를 불러올 수 없습니다. <a class="goSet">설정</a>에서 주소를 넣어주세요.</div>
     <div class="twobtn" style="margin-top:0">
       <button class="mini" id="docNewBtn" style="margin-top:0">＋ 문서 작성</button>
@@ -743,7 +752,7 @@
   function isAdmin(){return role()==="admin";}
   function isMgr(){return role()==="manager";}
   function isStaff(){return role()==="staff";}
-  var notices=[],roster=[],me=null,supplyTemplate="",mgrSites=[],adminSet=true,testMode=false;
+  var library=[],notices=[],roster=[],me=null,supplyTemplate="",mgrSites=[],adminSet=true,testMode=false;
   var payslips=[],myDocs=[],mySigs={},myPosts=[],paySummary=[],sigCache={},approvers=[],apprDocs=[];   // 서버가 첫 화면에 실어 보낸 데이터 (없으면 따로 불러옴)
   function loadXLSX(){return new Promise(function(res){if(window.XLSX)return res(true);var sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";sc.onload=function(){res(true);};sc.onerror=function(){res(false);};document.head.appendChild(sc);});}
   cfg.url=API;saveCfg();
@@ -804,7 +813,7 @@
     pestLast=j.pestLast||"";pestStatus();
     empForms.slots=EMP_FORM_SLOTS;
     if(j.role){SESS=SESS||{};if(j.tk)SESS.tk=j.tk;SESS.role=j.role;SESS.name=j.name||SESS.name;SESS.site=j.site||SESS.site||"";saveSess();}
-    notices=j.notices||[];roster=j.roster||[];me=j.me||null;supplyTemplate=j.supplyTemplate||"";mgrSites=j.mgrSites||[];
+    library=j.library||[];notices=j.notices||[];roster=j.roster||[];me=j.me||null;supplyTemplate=j.supplyTemplate||"";mgrSites=j.mgrSites||[];
     payslips=j.payslips||[];myDocs=j.myDocs||[];mySigs=j.mySigs||{};myPosts=j.myPosts||[];paySummary=j.paySummary||[];approvers=j.approvers||[];apprDocs=j.apprDocs||[];
     if(j.siteDocs&&j.siteDocs.dogup&&j.siteDocs.dogup.laborTotal){DOGUP=j.siteDocs.dogup;PAYROLL=j.siteDocs.payroll;PERPERSON=j.siteDocs.perperson;DOC_XLSX_URL=j.siteDocs.xlsx||"";}
   }
@@ -1514,7 +1523,73 @@
     }catch(e){docShowErr((docEditingId?"수정":"저장")+" 실패: "+e.message);}
     $("docSaveBtn").disabled=false;$("docSaveBtn").textContent=docEditingId?"수정 저장":"저장하기";
   }
+  // ==================== (11/5) 공용 자료실 ====================
+  var LIB_CATS=["협회 기본 서류","회의 기록","가입·회원 서식","재정","대외 활동·정책","교육·민간자격","사업 계획"];
+  function libOpen(u){if(!u)return;if(APP&&APP.openUrl)APP.openUrl(u);else window.open(u,"_blank");}
+  function libRefresh(){try{renderLibrary($("libCard"));}catch(e){}try{var hl=$("hmLib");if(hl){renderLibrary(hl);hl.style.display=(library||[]).length?"":"none";}}catch(e){}}
+  function renderLibrary(el){
+    if(!el)return;var adm=isAdmin();
+    var by={};(library||[]).forEach(function(x){var c=x.cat||"기타";(by[c]=by[c]||[]).push(x);});
+    var cats=LIB_CATS.concat(Object.keys(by).filter(function(c){return LIB_CATS.indexOf(c)<0;}));
+    var body=cats.filter(function(c){return by[c]&&by[c].length;}).map(function(c){
+      return '<div class="lib-cat">'+esc(c)+' <span>'+by[c].length+'</span></div>'+by[c].map(function(x){
+        return '<div class="lib-row"><a class="lib-a" data-lurl="'+esc(x.url||"")+'">'+esc(x.title||x.name||"자료")+'</a>'
+          +(x.scope==="officer"?'<span class="lib-b">임원만</span>':'')
+          +'<span class="lib-d">'+esc(x.at?fmtK(x.at):"")+'</span>'
+          +(adm?'<button class="fbtn" data-ledit="'+esc(x.id)+'">수정</button><button class="fbtn warn" data-ldel="'+esc(x.id)+'">삭제</button>':'')
+          +'</div>';
+      }).join("");
+    }).join("");
+    el.innerHTML='<div class="hm-h" style="justify-content:space-between">📁 공용 자료실'+(adm?'<button class="fbtn up" id="libUpBtn">＋ 자료 올리기</button>':'')+'</div>'
+      +(body||'<div class="hm-empty">'+(adm?'아직 올린 자료가 없습니다. ＋ 자료 올리기로 회칙·회의록·양식 등을 올려 두세요.':'아직 올라온 자료가 없습니다.')+'</div>');
+    el.querySelectorAll("[data-lurl]").forEach(function(a){a.addEventListener("click",function(){libOpen(a.getAttribute("data-lurl"));});});
+    var ub=el.querySelector("#libUpBtn");if(ub)ub.addEventListener("click",openLibUpload);
+    el.querySelectorAll("[data-ldel]").forEach(function(b){b.addEventListener("click",async function(){
+      var id=b.getAttribute("data-ldel");var x=(library||[]).filter(function(r){return String(r.id)===String(id);})[0];
+      if(!x||!confirm('"'+(x.title||x.name)+'" 자료를 삭제할까요? 파일도 함께 지워집니다.'))return;
+      try{var r=await cloudPost({action:"libDelete",id:id});library=r.library||[];libRefresh();toast("삭제했습니다");}catch(e){toast("실패: "+e.message);}
+    });});
+    el.querySelectorAll("[data-ledit]").forEach(function(b){b.addEventListener("click",function(){openLibEdit(b.getAttribute("data-ledit"));});});
+  }
+  function libCatOpts(sel){return LIB_CATS.map(function(c){return '<option'+(c===sel?' selected':'')+'>'+esc(c)+'</option>';}).join("");}
+  function libScopeOpts(sel){return '<option value="all"'+(sel!=="officer"?' selected':'')+'>전체 회원</option><option value="officer"'+(sel==="officer"?' selected':'')+'>임원만</option>';}
+  function openLibUpload(){
+    openSheet('<h3>📁 자료 올리기</h3>'
+      +'<div class="field"><label>분류</label><select id="lbCat">'+libCatOpts(LIB_CATS[0])+'</select></div>'
+      +'<div class="field"><label>제목 <small style="color:#868C94;font-weight:400">(비워 두면 파일 이름)</small></label><input type="text" id="lbTitle" placeholder="예: 회칙 (2026. 11. 5. 개정)"></div>'
+      +'<div class="field"><label>공개 범위</label><select id="lbScope">'+libScopeOpts("all")+'</select></div>'
+      +'<div class="field"><label>파일 <small style="color:#868C94;font-weight:400">(여러 개 가능, 한 파일 10MB 이하)</small></label><input type="file" id="lbFile" multiple></div>'
+      +'<div class="err hide" id="lbErr"></div>'
+      +'<div class="btns" style="margin-top:12px"><button class="btn ghost" id="lbCancel">취소</button><button class="btn primary" id="lbSave">올리기</button></div>');
+    $("lbCancel").addEventListener("click",closeSheet);
+    $("lbSave").addEventListener("click",async function(){
+      var btn=this,er=$("lbErr");er.classList.add("hide");
+      var fs=Array.prototype.slice.call($("lbFile").files||[]);
+      if(!fs.length){er.textContent="파일을 선택해 주세요.";er.classList.remove("hide");return;}
+      if(fs.some(function(f){return f.size>10*1024*1024;})){er.textContent="10MB가 넘는 파일이 있습니다.";er.classList.remove("hide");return;}
+      btn.disabled=true;btn.textContent="올리는 중…";
+      try{
+        var atts=[];for(var i=0;i<fs.length;i++){var a=await readFile(fs[i]);if(a)atts.push({name:fs[i].name||a.name,type:fs[i].type||"application/octet-stream",dataB64:String(a.dataUrl).split(",")[1]});}
+        var r=await cloudPost({action:"libAdd",cat:$("lbCat").value,title:$("lbTitle").value.trim(),scope:$("lbScope").value,attachments:atts});
+        library=r.library||[];closeSheet();libRefresh();toast("자료를 올렸습니다");
+      }catch(e){er.textContent="실패: "+e.message;er.classList.remove("hide");btn.disabled=false;btn.textContent="올리기";}
+    });
+  }
+  function openLibEdit(id){
+    var x=(library||[]).filter(function(r){return String(r.id)===String(id);})[0];if(!x)return;
+    openSheet('<h3>자료 수정</h3>'
+      +'<div class="field"><label>제목</label><input type="text" id="leTitle" value="'+esc(x.title||"")+'"></div>'
+      +'<div class="field"><label>분류</label><select id="leCat">'+libCatOpts(x.cat)+'</select></div>'
+      +'<div class="field"><label>공개 범위</label><select id="leScope">'+libScopeOpts(x.scope)+'</select></div>'
+      +'<div class="btns" style="margin-top:12px"><button class="btn ghost" id="leCancel">취소</button><button class="btn primary" id="leSave">저장</button></div>');
+    $("leCancel").addEventListener("click",closeSheet);
+    $("leSave").addEventListener("click",async function(){
+      try{var r=await cloudPost({action:"libUpdate",id:id,title:$("leTitle").value,cat:$("leCat").value,scope:$("leScope").value});library=r.library||[];closeSheet();libRefresh();toast("수정했습니다");}
+      catch(e){toast("실패: "+e.message);}
+    });
+  }
   function renderDocs(){
+    try{renderLibrary($("libCard"));}catch(e){}
     if(!haveUrl()){$("docList").innerHTML="";return;}
     var arr=scopedDocs();
     var body=$("docList");
@@ -2064,7 +2139,7 @@
   }
   function logoutLocal(expired){
     SESS=null;saveSess();try{localStorage.removeItem("fc_data");}catch(e){}try{if(APP&&APP.clearSession)APP.clearSession();}catch(e){}
-    expenses=[];docs=[];employees=[];notices=[];roster=[];me=null;
+    expenses=[];docs=[];employees=[];notices=[];roster=[];me=null;library=[];
     applyRoleUI();setView("login");showHub();
     if(expired)toast("다시 로그인해 주세요");
     try{if(haveUrl())fetch(cfg.url.trim()+"?api=auth").then(function(r){return r.json();}).then(function(j){adminSet=j.adminSet!==false;testMode=!!j.testMode;$("lgTest").classList.toggle("hide",!testMode);}).catch(function(){});}catch(e){}
@@ -2215,7 +2290,7 @@
     $("hmSub").textContent=me?[me.site,me.team,me.role].filter(Boolean).join(" · "):"";
     var unread=notices.filter(function(n){return !n.read;}).length;
     $("hmNotice").innerHTML='<div class="hm-h">📢 공지사항'+(unread?'<span class="hm-badge">'+unread+'</span>':'')+'</div>'+noticeRows(notices,8);
-    wireNotices($("hmNotice"));
+    wireNotices($("hmNotice"));libRefresh();
 
     var rd=(me&&me.resignDocs&&me.resignDocs.length)?'<div class="hm-ok">✓ 사직서 제출됨'+(me.leavePlan?' · 퇴사 예정 '+fmtK(me.leavePlan):'')+'</div>':'';
     $("hmDocs").innerHTML='<div class="hm-h">📄 서류 제출</div><div class="twobtn" style="margin-top:0"><button class="mini" id="hmHire" style="margin-top:0">입사 서류 제출</button><button class="mini" id="hmResign" style="margin-top:0">사직서 제출</button></div>'+rd;
