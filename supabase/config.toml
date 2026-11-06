@@ -1,0 +1,4 @@
+project_id = "kmpfa-staff"
+
+[functions.api]
+verify_jwt = false
