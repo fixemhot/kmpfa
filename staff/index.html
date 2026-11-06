@@ -335,6 +335,20 @@
   .mrow .mdt .eactions{margin-top:6px;}
   .mrow.hid,.mgrp.hid{display:none;}
   .msrch{width:100%;box-sizing:border-box;border:1px solid #E4E1D6;border-radius:10px;padding:9px 12px;font-size:14px;margin-bottom:10px;background:#fff;}
+  .rsbox{background:#fff;border:1px solid #E4E1D6;border-radius:12px;padding:10px 12px 4px;margin-bottom:12px;}
+  .rsbox .rsh{font-size:14px;font-weight:800;color:#2A2724;margin-bottom:4px;display:flex;justify-content:space-between;align-items:baseline;}
+  .rsbox .rsh small{font-size:11.5px;color:#8A8278;font-weight:600;}
+  .rsrow{display:flex;align-items:center;gap:8px;padding:8px 2px;border-top:1px solid #F0EDE5;cursor:pointer;font-size:13.5px;}
+  .rsrow .rsk{width:20px;font-size:11px;color:#B3ACA0;text-align:right;flex:none;}
+  .rsrow .rsn{font-weight:700;color:#2A2724;}
+  .rsrow .rsn small{font-weight:600;color:#8A8278;font-size:11px;margin-left:3px;}
+  .rsrow .rsme{font-size:10px;font-weight:800;color:#fff;background:#C9773B;border-radius:5px;padding:0 5px;margin-left:4px;}
+  .rsrow .rsc{margin-left:auto;font-weight:800;color:#5E4A34;white-space:nowrap;}
+  .rsrow .rsar{font-size:10px;color:#8A8278;transition:transform .15s;}
+  .rsrow.open .rsar{transform:rotate(90deg);}
+  .rslist{display:none;padding:2px 2px 9px 30px;font-size:12.5px;color:#4A443C;line-height:1.9;}
+  .rsrow.open+.rslist{display:block;}
+  .rslist span{display:inline-block;background:#F6F3EC;border-radius:6px;padding:0 7px;margin:0 4px 4px 0;}
   .empitem{background:#fff;border:1px solid #E4E1D6;border-radius:13px;padding:12px 14px;margin-bottom:9px;}
   .empitem .eline{display:flex;justify-content:space-between;align-items:baseline;gap:8px;cursor:pointer;}
   .empitem .enm{font-size:14.5px;font-weight:700;}
@@ -855,7 +869,7 @@
     if(j.role2){ROLES.role2=j.role2;cfg.role2=j.role2;}
     expenses=(j.expenses||[]).sort(function(a,b){return a.date<b.date?1:-1;});
     docs=(j.docs||[]).sort(function(a,b){return String(a.date)<String(b.date)?1:-1;});
-    employees=(j.employees||[]);MGR_ME=j.meId||"";
+    employees=(j.employees||[]);MGR_ME=j.meId||"";REF_STATS=j.refStats||[];
     if(j.empForms&&j.empForms.files)empForms.files=j.empForms.files;
     if(j.pest)pestFill(j.pest);
     apkInfo=j.apk||null;apkStatus();
@@ -1738,7 +1752,7 @@
     var list=(MG?employees.filter(function(x){return String(x.referrer||"")===String(MGR_ME);}):scopedEmp()).filter(function(x){return x.status!=="퇴사"&&x.status!=="입사예정"&&!OFF_RE.test(String(x.role||""));});
     var nRef=list.filter(function(x){return x.referrer&&x.referrer!=="natural";}).length,nNat=list.filter(function(x){return x.referrer==="natural";}).length;
     var html=MG?('<div class="hm-card" style="margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px"><div><b style="font-size:16px">🙋 내 회원 '+list.length+'명</b><div style="font-size:11.5px;color:#8A8278;margin-top:2px">내가 소개해 등록한 일반회원 (관리자 명단에도 함께 보입니다)</div></div><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="fbtn up" id="memAdd">＋ 내 회원 등록</button>'+(list.length?'<button class="fbtn" id="memXls">📥 엑셀</button>':'')+'</div></div>'):'<div class="hm-card" style="margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px"><div><b style="font-size:16px">🙋 일반회원 '+list.length+'명</b><div style="font-size:11.5px;color:#8A8278;margin-top:2px">임원 소개 '+nRef+'명 · 자연 유입 '+nNat+'명 · 분야 소속 '+(list.length-nRef-nNat)+'명</div></div>'+'<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="fbtn up" id="memAdd">＋ 일반회원 등록</button>'+(list.length?'<button class="fbtn" id="memXls">📥 엑셀</button>':'')+'</div></div>';
-    if(!list.length){html+='<div class="empty">일반회원이 없습니다.<br>위의 ＋ '+(MG?'내 회원':'일반회원')+' 등록으로 추가하세요.<br><small>회원가입신청서를 사진으로 찍으면 이름·연락처가 자동으로 채워집니다.</small></div>';body.innerHTML=html;bindMemTop(list);return;}
+    if(!list.length){html+='<div class="empty">일반회원이 없습니다.<br>위의 ＋ '+(MG?'내 회원':'일반회원')+' 등록으로 추가하세요.<br><small>회원가입신청서를 사진으로 찍으면 이름·연락처가 자동으로 채워집니다.</small></div>'+(MG?memStatsHtml():'');body.innerHTML=html;bindMemTop(list);bindMemStats(body);return;}
     var PAL=["#C9773B","#3E7CB1","#4E9A68","#9A5BB0","#C4505A","#2F9696","#B08A2A","#5F67C2","#A0674B","#6C8E3A"];
     var byName=function(a,b){return String(a.name||"").localeCompare(String(b.name||""),"ko");};
     var groups=[],gi={};
@@ -1763,7 +1777,8 @@
         +'<div class="mgh"><div class="mgav">'+esc(g.av)+'</div><div class="mgt"><b>'+esc(g.title)+'</b><small>'+esc(g.sub)+'</small></div><span class="mgc">'+g.items.length+'명</span><span class="mgar">▼</span></div>'
         +'<div class="mgb">'+g.items.map(function(x,i){return memRow(x,i+1);}).join("")+'</div></div>';
     });
-    body.innerHTML=html;
+    if(MG)html+=memStatsHtml();
+    body.innerHTML=html;bindMemStats(body);
     bindMemTop(list);
     body.querySelectorAll(".mgh").forEach(function(h){h.addEventListener("click",function(){var gEl=h.parentNode;gEl.classList.toggle("shut");memShut[gEl.getAttribute("data-mg")]=gEl.classList.contains("shut");});});
     body.querySelectorAll(".mrl").forEach(function(r){r.addEventListener("click",function(ev){if(ev.target.closest("a"))return;r.parentNode.classList.toggle("open");});});
@@ -1781,7 +1796,17 @@
     body.querySelectorAll("[data-medel]").forEach(function(b){b.addEventListener("click",async function(){await delEmp(b.getAttribute("data-medel"));renderMembers();});});
     body.querySelectorAll("[data-meatt]").forEach(function(el){el.addEventListener("click",function(){var pr=el.getAttribute("data-meatt").split("|");var x=employees.filter(function(e){return String(e.id)===pr[0];})[0];var a=x&&(x.attachments||[])[Number(pr[1])];if(a)openAttach(a);});});
   }
-  var memShut={},MGR_ME;
+  var memShut={},MGR_ME,REF_STATS;
+  // (11/6) 임원 화면: 임원별 소개 회원 수 (누르면 명단)
+  function memStatsHtml(){
+    var st=REF_STATS||[];if(!st.length)return "";
+    var tot=st.reduce(function(a,o){return a+(o.members||[]).length;},0);
+    return '<div class="rsbox"><div class="rsh">👥 임원별 회원 현황<small>전체 '+tot+'명</small></div>'
+      +st.map(function(o,i){var ms=o.members||[];return '<div class="rsrow" data-rs="'+i+'"><span class="rsk">'+(i+1)+'</span><span class="rsn">'+esc(o.name||"")+'<small>'+esc(o.role||"")+'</small>'+(String(o.id)===String(MGR_ME)?'<span class="rsme">나</span>':'')+'</span><span class="rsc">'+ms.length+'명</span><span class="rsar">▶</span></div>'
+        +'<div class="rslist">'+(ms.length?ms.map(function(m){return '<span>'+esc(m.name||"")+'</span>';}).join(""):'<i style="color:#B3ACA0">아직 등록한 회원이 없습니다</i>')+'</div>';}).join("")
+      +'</div>';
+  }
+  function bindMemStats(body){body.querySelectorAll("[data-rs]").forEach(function(r){r.addEventListener("click",function(){r.classList.toggle("open");});});}
   function bindMemTop(list){
     var mx=$("memXls");if(mx)mx.addEventListener("click",function(){memExport(list);});
     var ma=$("memAdd");if(ma)ma.addEventListener("click",function(){openRecruitForm(null,null);});
