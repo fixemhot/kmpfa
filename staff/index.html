@@ -297,6 +297,28 @@
   .empsum .esc .n{font-size:19px;font-weight:800;}
   .empsum .esc .l{font-size:10.5px;color:#8A8A80;margin-top:2px;font-weight:600;}
   .eteam{font-size:11px;color:#2A2724;font-weight:800;margin:13px 2px 6px;}
+  .mgrp{background:#fff;border:1px solid #E4E1D6;border-left:5px solid var(--ac,#8A8278);border-radius:12px;margin-bottom:12px;overflow:hidden;}
+  .mgrp .mgh{display:flex;align-items:center;gap:9px;padding:9px 12px;background:var(--acbg,#F6F3EC);cursor:pointer;user-select:none;}
+  .mgrp .mgav{width:30px;height:30px;border-radius:50%;background:var(--ac,#8A8278);color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex:none;}
+  .mgrp .mgt{flex:1;min-width:0;line-height:1.25;}
+  .mgrp .mgt b{font-size:14px;color:#2A2724;}
+  .mgrp .mgt small{display:block;font-size:11px;color:#8A8278;font-weight:600;}
+  .mgrp .mgc{font-size:12px;font-weight:800;color:var(--ac,#8A8278);background:#fff;border-radius:999px;padding:2px 9px;flex:none;}
+  .mgrp .mgar{font-size:11px;color:#8A8278;transition:transform .15s;flex:none;}
+  .mgrp.shut .mgar{transform:rotate(-90deg);}
+  .mgrp.shut .mgb{display:none;}
+  .mrow{border-top:1px solid #F0EDE5;}
+  .mrow .mrl{display:flex;align-items:center;gap:8px;padding:7px 12px;min-height:22px;cursor:pointer;font-size:13.5px;}
+  .mrow .mno{width:22px;font-size:11px;color:#B3ACA0;text-align:right;flex:none;}
+  .mrow .mnm{font-weight:700;color:#2A2724;flex:none;}
+  .mrow .mtg{font-size:10px;font-weight:700;color:var(--ac,#8A8278);border:1px solid var(--ac,#8A8278);border-radius:5px;padding:0 4px;flex:none;}
+  .mrow .mph{margin-left:auto;font-size:12.5px;color:#5E4A34;text-decoration:none;white-space:nowrap;}
+  .mrow .mdt{display:none;padding:2px 12px 10px 42px;font-size:12px;color:#6F685E;line-height:1.55;}
+  .mrow.open{background:#FBFAF6;}
+  .mrow.open .mdt{display:block;}
+  .mrow .mdt .eactions{margin-top:6px;}
+  .mrow.hid,.mgrp.hid{display:none;}
+  .msrch{width:100%;box-sizing:border-box;border:1px solid #E4E1D6;border-radius:10px;padding:9px 12px;font-size:14px;margin-bottom:10px;background:#fff;}
   .empitem{background:#fff;border:1px solid #E4E1D6;border-radius:13px;padding:12px 14px;margin-bottom:9px;}
   .empitem .eline{display:flex;justify-content:space-between;align-items:baseline;gap:8px;cursor:pointer;}
   .empitem .enm{font-size:14.5px;font-weight:700;}
@@ -1698,23 +1720,74 @@
     var list=scopedEmp().filter(function(x){return x.status!=="퇴사"&&x.status!=="입사예정"&&!OFF_RE.test(String(x.role||""));});
     var nRef=list.filter(function(x){return x.referrer&&x.referrer!=="natural";}).length,nNat=list.filter(function(x){return x.referrer==="natural";}).length;
     var html='<div class="hm-card" style="margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px"><div><b style="font-size:16px">🙋 일반회원 '+list.length+'명</b><div style="font-size:11.5px;color:#8A8278;margin-top:2px">임원 소개 '+nRef+'명 · 자연 유입 '+nNat+'명 · 분야 소속 '+(list.length-nRef-nNat)+'명</div></div>'+'<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="fbtn up" id="memAdd">＋ 일반회원 등록</button>'+(list.length?'<button class="fbtn" id="memXls">📥 엑셀</button>':'')+'</div></div>';
-    if(!list.length){html+='<div class="empty">일반회원이 없습니다.<br>위의 ＋ 일반회원 등록으로 추가하세요.</div>';}
-    else{
-      var own=list.filter(function(x){return !x.referrer;});
-      if(own.length)html+='<div class="eteam">분야 소속 회원 ('+own.length+'명)</div>'+own.map(empCard).join("");
-      var mg={},mo=[];list.forEach(function(x){if(!x.referrer)return;var k=x.refName||"소개자 미상";if(!mg[k]){mg[k]=[];mo.push(k);}mg[k].push(x);});
-      mo.forEach(function(k){html+='<div class="eteam">'+(k==="자연 유입"?"🌱 자연 유입":"소개 "+esc(k))+' ('+mg[k].length+'명)</div>'+mg[k].map(empCard).join("");});
-    }
+    if(!list.length){html+='<div class="empty">일반회원이 없습니다.<br>위의 ＋ 일반회원 등록으로 추가하세요.</div>';body.innerHTML=html;bindMemTop(list);return;}
+    var PAL=["#C9773B","#3E7CB1","#4E9A68","#9A5BB0","#C4505A","#2F9696","#B08A2A","#5F67C2","#A0674B","#6C8E3A"];
+    var byName=function(a,b){return String(a.name||"").localeCompare(String(b.name||""),"ko");};
+    var groups=[],gi={};
+    list.forEach(function(x){
+      var key=!x.referrer?"__own":(x.referrer==="natural"?"__nat":"r:"+(x.referrer||x.refName));
+      if(!gi[key]){var g={key:key,items:[]};
+        if(key==="__own"){g.title="분야 소속 회원";g.sub="임원 소개 없이 분야에 소속";g.av="🏷";g.ac="#8A8278";}
+        else if(key==="__nat"){g.title="자연 유입";g.sub="임원 소개 없이 직접 가입";g.av="🌱";g.ac="#4E9A68";}
+        else{var o=employees.filter(function(e){return String(e.id)===String(x.referrer);})[0];
+          g.title=(o&&o.name)||x.refName||"소개자 미상";g.sub=((o&&o.role)?o.role+" · ":"")+"소개 회원";g.av=String(g.title).charAt(0);}
+        gi[key]=g;groups.push(g);}
+      gi[key].items.push(x);
+    });
+    var offG=groups.filter(function(g){return g.key.indexOf("r:")===0;}).sort(function(a,b){return b.items.length-a.items.length||String(a.title).localeCompare(String(b.title),"ko");});
+    offG.forEach(function(g,i){g.ac=PAL[i%PAL.length];});
+    var ordered=offG.concat(groups.filter(function(g){return g.key==="__nat";}),groups.filter(function(g){return g.key==="__own";}));
+    html+='<input class="msrch" id="memSearch" type="search" placeholder="🔍 이름·전화번호로 찾기">';
+    if(ordered.length>1)html+='<div style="display:flex;justify-content:flex-end;margin:-4px 2px 8px"><a id="memFold" style="font-size:12px;color:#8A8278;text-decoration:underline;cursor:pointer">모두 접기</a></div>';
+    ordered.forEach(function(g){
+      g.items.sort(byName);
+      html+='<div class="mgrp'+(memShut[g.key]?' shut':'')+'" data-mg="'+esc(g.key)+'" style="--ac:'+g.ac+';--acbg:'+g.ac+'14">'
+        +'<div class="mgh"><div class="mgav">'+esc(g.av)+'</div><div class="mgt"><b>'+esc(g.title)+'</b><small>'+esc(g.sub)+'</small></div><span class="mgc">'+g.items.length+'명</span><span class="mgar">▼</span></div>'
+        +'<div class="mgb">'+g.items.map(function(x,i){return memRow(x,i+1);}).join("")+'</div></div>';
+    });
     body.innerHTML=html;
-    [["data-eedit","data-meedit"],["data-eleave","data-meleave"],["data-edel","data-medel"],["data-erej","data-merej"]].forEach(function(p){
-      body.querySelectorAll("["+p[0]+"]").forEach(function(b){b.setAttribute(p[1],b.getAttribute(p[0]));b.removeAttribute(p[0]);});});
-    bindEmpCards(body);
+    bindMemTop(list);
+    body.querySelectorAll(".mgh").forEach(function(h){h.addEventListener("click",function(){var gEl=h.parentNode;gEl.classList.toggle("shut");memShut[gEl.getAttribute("data-mg")]=gEl.classList.contains("shut");});});
+    body.querySelectorAll(".mrl").forEach(function(r){r.addEventListener("click",function(ev){if(ev.target.closest("a"))return;r.parentNode.classList.toggle("open");});});
+    var mf=$("memFold");if(mf){var upd=function(){var all=[].every.call(body.querySelectorAll(".mgrp"),function(g){return g.classList.contains("shut");});mf.textContent=all?"모두 펼치기":"모두 접기";};upd();
+      mf.addEventListener("click",function(){var shut=mf.textContent==="모두 접기";body.querySelectorAll(".mgrp").forEach(function(g){g.classList.toggle("shut",shut);memShut[g.getAttribute("data-mg")]=shut;});upd();});}
+    var ms=$("memSearch");if(ms)ms.addEventListener("input",function(){
+      var q=ms.value.replace(/\s/g,"").toLowerCase(),qd=q.replace(/[^\d]/g,"");
+      body.querySelectorAll(".mgrp").forEach(function(g){var n=0;
+        g.querySelectorAll(".mrow").forEach(function(r){var hit=!q||r.getAttribute("data-nm").indexOf(q)>=0||(qd.length>=3&&r.getAttribute("data-ph").indexOf(qd)>=0);r.classList.toggle("hid",!hit);if(hit)n++;});
+        g.classList.toggle("hid",!n);if(q&&n)g.classList.remove("shut");});
+    });
+    body.querySelectorAll("[data-mredit]").forEach(function(b){b.addEventListener("click",function(){openRecruitForm(null,b.getAttribute("data-mredit"));});});
     body.querySelectorAll("[data-meedit]").forEach(function(b){b.addEventListener("click",function(){setView("emp");openEmpForm(b.getAttribute("data-meedit"));});});
     body.querySelectorAll("[data-meleave]").forEach(function(b){b.addEventListener("click",function(){setView("emp");leaveEmp(b.getAttribute("data-meleave"));});});
     body.querySelectorAll("[data-medel]").forEach(function(b){b.addEventListener("click",async function(){await delEmp(b.getAttribute("data-medel"));renderMembers();});});
-    body.querySelectorAll("[data-merej]").forEach(function(b){b.addEventListener("click",async function(){await rejoinEmp(b.getAttribute("data-merej"));renderMembers();});});
+    body.querySelectorAll("[data-meatt]").forEach(function(el){el.addEventListener("click",function(){var pr=el.getAttribute("data-meatt").split("|");var x=employees.filter(function(e){return String(e.id)===pr[0];})[0];var a=x&&(x.attachments||[])[Number(pr[1])];if(a)openAttach(a);});});
+  }
+  var memShut={};
+  function bindMemTop(list){
     var mx=$("memXls");if(mx)mx.addEventListener("click",function(){memExport(list);});
     var ma=$("memAdd");if(ma)ma.addEventListener("click",function(){openRecruitForm(null,null);});
+  }
+  function memRow(x,no){
+    var ph=String(x.phone||""),pd=ph.replace(/[^\d]/g,"");
+    var tags="";if(x.mtype&&x.mtype!=="일반회원")tags+='<span class="mtg">'+esc(x.mtype)+'</span>';
+    if((x.attachments||[]).length)tags+='<span title="신청서 사진" style="font-size:11px;flex:none">📎</span>';
+    var d=[];
+    if(x.joinDate||x.applyDate)d.push("가입 "+fmtK(x.joinDate||x.applyDate));
+    if(x.team)d.push("소속 "+esc(x.team));
+    if(x.job)d.push(esc(x.job));
+    if(x.addr)d.push(esc(x.addr));
+    if(x.email)d.push(esc(x.email));
+    if(x.pet)d.push("반려동물 "+esc(x.pet));
+    var att=(x.attachments||[]).map(function(a,i){return '<span class="pvatt" data-meatt="'+esc(x.id)+'|'+i+'">'+esc(a.name)+'</span>';}).join(" ");
+    return '<div class="mrow" data-nm="'+esc(String(x.name||"").replace(/\s/g,"").toLowerCase())+'" data-ph="'+esc(pd)+'">'
+      +'<div class="mrl"><span class="mno">'+no+'</span><span class="mnm">'+esc(x.name||"")+'</span>'+tags
+      +(ph?'<a class="mph" href="tel:'+esc(pd)+'">'+esc(ph)+'</a>':'<span class="mph" style="color:#C9C3B8">번호 없음</span>')+'</div>'
+      +'<div class="mdt">'+(d.length?d.join(" · "):"추가 정보 없음")
+      +(att?'<div style="margin-top:4px">📎 '+att+'</div>':'')
+      +(x.memo?'<div style="margin-top:4px">'+esc(x.memo)+'</div>':'')
+      +'<div class="eactions"><button '+(x.referrer?'data-mredit':'data-meedit')+'="'+esc(x.id)+'">✏️ 수정</button><button class="warn" data-meleave="'+esc(x.id)+'">탈퇴 처리</button><button class="warn" data-medel="'+esc(x.id)+'">삭제</button></div>'
+      +'</div></div>';
   }
   // ---- (11/5) 일반회원 명단 엑셀 ----
   function memExport(list){
