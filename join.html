@@ -74,7 +74,10 @@ footer a:hover{color:#2A2724}
 .jbox{background:#fff;border:1px solid #E2DCD0;border-radius:8px;padding:28px 28px 24px}
 .jok{display:none;background:#fff;border:1px solid #E2DCD0;border-radius:8px;padding:40px 28px;text-align:center}
 .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
-.mcard{background:#fff;border:1px solid #E2DCD0;border-radius:8px;padding:18px 20px 16px;margin-bottom:18px}
+.mcol{display:flex;flex-direction:column;gap:18px}
+.mcard{background:#fff;border:1px solid #E2DCD0;border-radius:8px;padding:18px 20px 16px;flex:1;display:flex;flex-direction:column}
+.mcard .plist{flex:1;display:flex;flex-direction:column}
+.mcard .plist li{flex:1;display:flex;flex-direction:column;justify-content:center}
 .mcard.special{border-color:#C9A96E;box-shadow:0 0 0 3px #F3EBDD}
 .mhead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .mfee{display:inline-block;font-size:.84rem;font-weight:600;color:#7A6247;background:#F3EBDD;border-radius:999px;padding:5px 12px;white-space:nowrap}
@@ -130,8 +133,8 @@ footer a:hover{color:#2A2724}
 </div>
 </section>
 <section style="padding:72px 0 88px">
-<div class="wrap cols" style="max-width:1120px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:1fr 1.5fr;gap:56px;align-items:start">
-<div>
+<div class="wrap cols" style="max-width:1120px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:1fr 1.5fr;gap:56px;align-items:stretch">
+<div class="mcol">
 <div class="mcard">
 <div class="mhead"><h2 style="font-family:'Nanum Myeongjo','Batang',serif;font-weight:700;line-height:1.3;margin:0;letter-spacing:-.01em;color:#2A2724;font-size:clamp(1.45rem,2.6vw,2.05rem);font-size:1.35rem">일반회원 가입</h2><span class="mfee free">회비 없음</span></div>
 <p style="margin:6px 0 0;color:#5C544A;font-size:.93rem;line-height:1.5">협회의 뜻에 동의하는 분이면 누구나 회비 없이 가입할 수 있습니다. 현재 회원 <span data-kmpfa="members">103</span>명과 함께합니다.</p>
