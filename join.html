@@ -141,7 +141,7 @@ footer a:hover{color:#2A2724}
 <div class="jme" id="jme"><span>🟡</span><span><b id="jme_n"></b><span class="vt">카카오 확인</span><br><span id="jme_e" style="color:#847C71;font-size:.88rem"></span></span><a href="#" id="jswitch">다른 계정으로</a></div>
 <div class="err" id="jerr" role="alert"></div>
 <div class="two">
-<div class="fld"><label for="j_name">성명 <span class="req">*</span></label><input type="text" id="j_name" name="name" autocomplete="name" maxlength="20" required></div>
+<div class="fld"><label for="j_name">성명 (실명) <span class="req">*</span></label><input type="text" id="j_name" name="name" autocomplete="name" maxlength="20" required></div>
 <div class="fld"><label for="j_phone">휴대전화 <span class="req">*</span></label><input type="tel" id="j_phone" name="phone" autocomplete="tel" inputmode="numeric" placeholder="010-0000-0000" maxlength="13" required></div>
 </div>
 <div class="two">
@@ -190,7 +190,7 @@ footer a:hover{color:#2A2724}
     SESSION=sess;var u=sess.user||{},m=u.user_metadata||{};
     var nick=m.nickname||m.preferred_username||m.user_name||'',real=m.name||m.full_name||'',email=u.email||m.email||'',ph=String(u.phone||m.phone_number||'').replace(/^\+82/,'0').replace(/\D/g,'');
     $('jme_n').textContent=real||nick||'카카오 회원';$('jme_e').textContent=email||'이메일 제공 안 함';
-    if(real){$('j_name').value=real;$('j_name').readOnly=true;}else if(nick&&!$('j_name').value){$('j_name').placeholder='실명 (카카오 닉네임: '+nick+')';}
+    if(!$('j_name').value){$('j_name').value=real||nick||'';}$('j_name').readOnly=false;$('j_name').placeholder='실명을 입력해 주세요';
     if(email){$('j_email').value=email;$('j_email').readOnly=true;}
     if(ph.length>=10){$('j_phone').value=fmtPhone(ph);$('j_phone').readOnly=true;}
     $('jstart').style.display='none';f.style.display='block';
