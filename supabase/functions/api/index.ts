@@ -804,8 +804,13 @@ async function libAll(c) {
   return Array.isArray(v) ? v : [];
 }
 async function libFor(c, who) {
+  // (11/9) 공개 범위 3단계: all(전체) / special(특별회원 이상) / officer(임원만)
   const officer = who.role === "admin" || who.role === "manager";
-  return (await libAll(c)).filter((x)=>officer || String(x.scope || "all") !== "officer");
+  const special = officer || !!(who.emp && String(who.emp.mtype || "") === "특별회원");
+  return (await libAll(c)).filter((x)=>{
+    const sc = String(x.scope || "all");
+    return sc === "all" || (sc === "special" && special) || (sc === "officer" && officer);
+  });
 }
 async function dataFor(c, who) {
   // 필요한 표를 동시에 미리 읽어 둠 (아래에서는 기억해 둔 값을 씀)
@@ -2588,7 +2593,7 @@ async function handlePost(c, body) {
   // ============ (11/5) 공용 자료실 : 관리자만 올리기·고치기·지우기 ============
   if (a === "libAdd") {
     const cat = LIB_CATS.indexOf(String(body.cat)) >= 0 ? String(body.cat) : LIB_CATS[0];
-    const scope = String(body.scope) === "officer" ? "officer" : "all";
+    const scope = /^(officer|special)$/.test(String(body.scope)) ? String(body.scope) : "all";
     const atts = body.attachments || [];
     if (!atts.length) return {
       ok: false,
@@ -2629,7 +2634,7 @@ async function handlePost(c, body) {
     };
     if (body.title !== undefined && String(body.title).trim()) x.title = String(body.title).trim();
     if (body.cat !== undefined && LIB_CATS.indexOf(String(body.cat)) >= 0) x.cat = String(body.cat);
-    if (body.scope !== undefined) x.scope = String(body.scope) === "officer" ? "officer" : "all";
+    if (body.scope !== undefined) x.scope = /^(officer|special)$/.test(String(body.scope)) ? String(body.scope) : "all";
     await c.set("LIBRARY", JSON.stringify(list));
     return {
       ok: true,
