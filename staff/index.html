@@ -2668,7 +2668,7 @@
     b.addEventListener("click",function(){
       if(!KSB){kkErr("로그인 모듈을 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.");return;}
       $("kkErr").classList.add("hide");b.disabled=true;
-      KSB.auth.signInWithOAuth({provider:"kakao",options:{redirectTo:location.origin+location.pathname}}).then(function(r){if(r&&r.error){b.disabled=false;kkErr("카카오 로그인을 시작하지 못했습니다: "+r.error.message);}});
+      KSB.auth.signInWithOAuth({provider:"kakao",options:{redirectTo:location.origin+location.pathname,scopes:"profile_nickname"}}).then(function(r){if(r&&r.error){b.disabled=false;kkErr("카카오 로그인을 시작하지 못했습니다: "+r.error.message);}});
     });
     $("lkBack").addEventListener("click",async function(){try{if(KSB)await KSB.auth.signOut({scope:"local"});}catch(e){}KK_SESS=null;$("lgLink").classList.add("hide");$("lgPick").classList.remove("hide");});
     async function doLink(){
