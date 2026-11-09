@@ -74,6 +74,19 @@ footer a:hover{color:#2A2724}
 .jbox{background:#fff;border:1px solid #E2DCD0;border-radius:8px;padding:28px 28px 24px}
 .jok{display:none;background:#fff;border:1px solid #E2DCD0;border-radius:8px;padding:40px 28px;text-align:center}
 .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.mcard{background:#fff;border:1px solid #E2DCD0;border-radius:8px;padding:22px 24px 20px;margin-bottom:22px}
+.mcard.special{border-color:#C9A96E;box-shadow:0 0 0 3px #F3EBDD}
+.mhead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.mfee{display:inline-block;font-size:.84rem;font-weight:600;color:#7A6247;background:#F3EBDD;border-radius:999px;padding:5px 12px;white-space:nowrap}
+.mfee.free{color:#5C544A;background:#F1EFEA}
+.fee{display:none;margin:-6px 0 18px;padding:16px 16px 14px;border:1px solid #C9A96E;background:#FBF7EE;border-radius:8px}
+.fee.on{display:block}
+.fee h4{margin:0 0 8px;font-size:1rem;color:#2A2724}
+.fee .amt{font-family:'Nanum Myeongjo','Batang',serif;font-size:1.3rem;font-weight:800;color:#7A6247}
+.fee .acct{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0 12px;padding:10px 12px;background:#fff;border:1px dashed #C9A96E;border-radius:6px;font-size:.95rem}
+.fee .acct b{color:#2A2724}
+.fee .cp{font:inherit;font-size:.82rem;color:#7A6247;background:#F3EBDD;border:0;border-radius:4px;padding:4px 10px;cursor:pointer}
+.fee small{display:block;color:#847C71;font-size:.84rem;line-height:1.6;margin-top:6px}
 .kbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;box-sizing:border-box;font:inherit;font-size:1.05rem;font-weight:700;color:#191919;background:#FEE500;border:0;border-radius:8px;padding:15px 20px;cursor:pointer}
 .kbtn:hover{background:#F5DC00}
 .kbtn[disabled]{opacity:.6;cursor:default}
@@ -119,24 +132,27 @@ footer a:hover{color:#2A2724}
 <section style="padding:72px 0 88px">
 <div class="wrap cols" style="max-width:1120px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:1fr 1.5fr;gap:56px;align-items:start">
 <div>
-<h2 style="font-family:'Nanum Myeongjo','Batang',serif;font-weight:700;line-height:1.3;margin:0;letter-spacing:-.01em;color:#2A2724;font-size:clamp(1.45rem,2.6vw,2.05rem)">일반회원 가입</h2>
-<ul class="plist" style="margin-top:20px;list-style:none;margin:0;padding:0;border-top:1px solid #E2DCD0">
+<div class="mcard">
+<div class="mhead"><h2 style="font-family:'Nanum Myeongjo','Batang',serif;font-weight:700;line-height:1.3;margin:0;letter-spacing:-.01em;color:#2A2724;font-size:clamp(1.45rem,2.6vw,2.05rem);font-size:1.35rem">일반회원 가입</h2><span class="mfee free">회비 없음</span></div>
+<ul class="plist" style="margin-top:14px;list-style:none;margin:0;padding:0;border-top:1px solid #E2DCD0">
 <li style="padding:18px 0;border-bottom:1px solid #E2DCD0"><b style="display:block;color:#2A2724">협회 소식과 교육 안내</b><span style="color:#847C71;font-size:.95rem">공청회·무료 교육·입법 진행 상황을 먼저 알려 드립니다.</span></li>
 <li style="padding:18px 0;border-bottom:1px solid #E2DCD0"><b style="display:block;color:#2A2724">회원앱 이용</b><span style="color:#847C71;font-size:.95rem">공지 확인과 협회 활동 참여를 회원앱에서 할 수 있습니다. 가입 뒤에는 카카오 계정으로 로그인합니다.</span></li>
 <li style="padding:18px 0;border-bottom:1px solid #E2DCD0"><b style="display:block;color:#2A2724">개인정보는 이렇게 지킵니다</b><span style="color:#847C71;font-size:.95rem">비밀번호를 만들지 않고 카카오 로그인으로 본인을 확인합니다. 입력한 정보는 협회 서버에만 저장되며, 홈페이지에는 회원 수만 표시됩니다.</span></li>
 <li style="padding:18px 0;border-bottom:1px solid #E2DCD0"><b style="display:block;color:#2A2724">한 명의 힘</b><span style="color:#847C71;font-size:.95rem">회원 수는 지자체와 의회에 협회의 목소리를 전하는 근거가 됩니다. 현재 회원 <span data-kmpfa="members">103</span>명.</span></li>
 </ul>
-<p style="margin:22px 0 0;font-size:.92rem;color:#847C71;line-height:1.7">가입 자격: 협회의 목적에 동의하는 만 19세 이상 누구나. 일반회원은 회비가 없으며, 탈퇴는 사무국에 알려 주시면 바로 처리됩니다.</p>
-<h2 style="font-family:'Nanum Myeongjo','Batang',serif;font-weight:700;line-height:1.3;margin:0;letter-spacing:-.01em;color:#2A2724;font-size:clamp(1.45rem,2.6vw,2.05rem);margin-top:48px">특별회원 가입</h2>
-<p style="margin:14px 0 0;color:#5C544A;font-size:.97rem;line-height:1.7">협회 활동에 함께 참여하는 회원입니다. 회비는 <b style="color:#2A2724">월 3만 원</b>(연납 30만 원, 2개월 할인)이며, 다음 권리를 갖습니다.</p>
-<ul class="plist" style="margin-top:16px;list-style:none;margin:0;padding:0;border-top:1px solid #E2DCD0">
+<p style="margin:18px 0 0;font-size:.92rem;color:#847C71;line-height:1.7">가입 자격: 협회의 목적에 동의하는 만 19세 이상 누구나. 탈퇴는 사무국에 알려 주시면 바로 처리됩니다.</p>
+</div>
+<div class="mcard special">
+<div class="mhead"><h2 style="font-family:'Nanum Myeongjo','Batang',serif;font-weight:700;line-height:1.3;margin:0;letter-spacing:-.01em;color:#2A2724;font-size:clamp(1.45rem,2.6vw,2.05rem);font-size:1.35rem">특별회원 가입</h2><span class="mfee">월 3만 원 · 연납 30만 원</span></div>
+<p style="margin:12px 0 0;color:#5C544A;font-size:.97rem;line-height:1.7">협회 활동에 함께 참여하는 회원입니다. 일반회원의 혜택에 더해 다음 권리를 갖습니다.</p>
+<ul class="plist" style="margin-top:14px;list-style:none;margin:0;padding:0;border-top:1px solid #E2DCD0">
 <li style="padding:18px 0;border-bottom:1px solid #E2DCD0"><b style="display:block;color:#2A2724">총회 의결권</b><span style="color:#847C71;font-size:.95rem">협회의 중요한 결정(회칙 개정, 임원 선출, 사업 계획)에 표를 행사합니다. 일반회원은 참관과 발언만 할 수 있습니다.</span></li>
 <li style="padding:18px 0;border-bottom:1px solid #E2DCD0"><b style="display:block;color:#2A2724">교육 수강료·응시료 30% 감면</b><span style="color:#847C71;font-size:.95rem">협회가 운영하는 교육 과정과 자격 검정의 수강료·응시료를 30% 감면합니다. 교육 한 번이면 연회비의 상당 부분을 돌려받는 셈입니다.</span></li>
 <li style="padding:18px 0;border-bottom:1px solid #E2DCD0"><b style="display:block;color:#2A2724">자료실 전체 열람</b><span style="color:#847C71;font-size:.95rem">회원앱 공용 자료실의 모든 자료와 교재 PDF를 볼 수 있습니다. 일반회원은 공개 자료만 봅니다.</span></li>
 <li style="padding:18px 0;border-bottom:1px solid #E2DCD0"><b style="display:block;color:#2A2724">행사 우선 초청과 활동 증명</b><span style="color:#847C71;font-size:.95rem">공청회·교육·총회 일정을 먼저 안내받고 우선 초청됩니다. 협회 활동 참여 확인서와 연말 감사장을 드립니다.</span></li>
-<li style="padding:18px 0;border-bottom:1px solid #E2DCD0"><b style="display:block;color:#2A2724">신청 방법</b><span style="color:#847C71;font-size:.95rem">아래 신청서의 회원 구분에서 「특별회원」을 선택하면 먼저 일반회원으로 등록되고, 사무국이 회비 납부 방법을 안내합니다. 납부가 확인되면 특별회원으로 전환됩니다.</span></li>
 </ul>
-<p style="margin:14px 0 0;font-size:.88rem;color:#847C71;line-height:1.7">특별회원 혜택은 협회가 직접 운영하는 교육·자료·행사에 한합니다. 지자체 위탁 운영 공모나 채용에서 회원을 우대하지 않습니다.</p>
+<p style="margin:14px 0 0;font-size:.88rem;color:#847C71;line-height:1.7">신청서의 회원 구분에서 「특별회원」을 고르면 회비 납부 안내가 나옵니다. 특별회원 혜택은 협회가 직접 운영하는 교육·자료·행사에 한하며, 지자체 위탁 운영 공모나 채용에서 회원을 우대하지 않습니다.</p>
+</div>
 </div>
 <div>
 <div class="jstart" id="jstart">
@@ -164,7 +180,14 @@ footer a:hover{color:#2A2724}
 <div class="fld"><label for="j_pet">반려동물</label><select id="j_pet" name="pet"><option>없음</option><option>있음</option></select></div>
 <div class="fld"><label for="j_petd">종류·마릿수</label><input type="text" id="j_petd" name="petd" maxlength="60" placeholder="예: 개 1, 고양이 2"></div>
 </div>
-<div class="fld"><label for="j_mtype">회원 구분</label><select id="j_mtype" name="mtype"><option>일반회원</option><option>특별회원</option></select></div>
+<div class="fld"><label for="j_mtype">회원 구분</label><select id="j_mtype" name="mtype"><option>일반회원 (회비 없음)</option><option>특별회원 (월 3만 원 · 연납 30만 원)</option></select></div>
+<div class="fee" id="jfee">
+<h4>특별회원 회비 납부</h4>
+<div>연회비 <span class="amt">300,000원</span> <span style="color:#847C71;font-size:.9rem">(월 3만 원 × 12개월 − 2개월 할인)</span></div>
+<div class="acct" id="jacct" data-bank="" data-no="" data-holder="한국반려동물이동장례협회"><span id="jacct_t">입금 계좌: <b>준비 중</b> — 가입 신청 후 사무국이 문자로 안내해 드립니다.</span></div>
+<label for="j_dep">입금자명 <span style="color:#847C71;font-weight:400">(입금하실 분 이름이 성명과 다르면 적어 주세요)</span></label><input type="text" id="j_dep" name="depositor" maxlength="20" placeholder="성명과 같으면 비워 두세요">
+<small>입금이 확인되면 사무국이 특별회원으로 전환하고 알려 드립니다. 그 전까지는 일반회원으로 등록됩니다.</small>
+</div>
 <div class="hp" aria-hidden="true"><label>홈페이지<input type="text" id="j_web" name="website" tabindex="-1" autocomplete="off"></label></div>
 <div style="margin:6px 0 18px">
 <label class="chk"><input type="checkbox" id="j_c1" required><span><b>개인정보 수집·이용 동의 <span class="req">*</span></b><small>수집 항목: 성명, 휴대전화, 이메일, 주소, 직업·소속, 반려동물 유무, 성별 · 목적: 회원 관리, 협회 소식·교육·행사 안내, 총회 소집 통지 · 보유 기간: 회원 탈퇴 시까지(탈퇴 후 즉시 파기) · 동의를 거부할 수 있으나 거부하면 가입할 수 없습니다. 수집한 정보는 법령에 따른 경우 외에는 제3자에게 제공하지 않습니다.</small></span></label>
@@ -217,6 +240,11 @@ footer a:hover{color:#2A2724}
     SB.auth.getSession().then(function(r){if(r&&r.data&&r.data.session)showForm(r.data.session);});
     SB.auth.onAuthStateChange(function(ev,sess){if(sess&&(ev==='SIGNED_IN'||ev==='INITIAL_SESSION'))showForm(sess);if(ev==='SIGNED_OUT')showStart();});
   }
+  // 특별회원 선택 시 납부 칸 표시
+  function isSpecial(){return /특별/.test($('j_mtype').value);}
+  function feeToggle(){$('jfee').classList.toggle('on',isSpecial());}
+  $('j_mtype').addEventListener('change',feeToggle);feeToggle();
+  (function(){var a=$('jacct');if(a.dataset.no){$('jacct_t').innerHTML='입금 계좌: <b>'+a.dataset.bank+' '+a.dataset.no+'</b> (예금주 '+a.dataset.holder+') <button type="button" class="cp" id="jcp">계좌 복사</button>';$('jcp').addEventListener('click',function(){try{navigator.clipboard.writeText(a.dataset.no);this.textContent='복사됨';}catch(e){}});}})();
   $('j_phone').addEventListener('input',function(){var d=this.value.replace(/\D/g,'').slice(0,11);this.value=d.length>7?d.replace(/(\d{3})(\d{3,4})(\d{4})$/,'$1-$2-$3'):d.length>3?d.replace(/(\d{3})(\d+)/,'$1-$2'):d;});
   f.addEventListener('submit',function(ev){
     ev.preventDefault();err.style.display='none';
@@ -226,11 +254,12 @@ footer a:hover{color:#2A2724}
     if(digits.length<10||!/^01/.test(digits))return fail('휴대전화 번호를 확인해 주세요.');
     var em=$('j_email').value.trim();if(em&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em))return fail('이메일 형식을 확인해 주세요.');
     if(!$('j_c1').checked||!$('j_c2').checked)return fail('개인정보 수집·이용과 회칙 준수에 동의해야 가입할 수 있습니다.');
-    var form={name:name,phone:digits,email:em,gender:$('j_gender').value,addr:$('j_addr').value.trim(),job:$('j_job').value.trim(),pet:$('j_pet').value,petd:$('j_petd').value.trim(),mtype:$('j_mtype').value,website:$('j_web').value,consent:{privacy:true,rules:true,notice:$('j_c3').checked}};
+    var form={name:name,phone:digits,email:em,gender:$('j_gender').value,addr:$('j_addr').value.trim(),job:$('j_job').value.trim(),pet:$('j_pet').value,petd:$('j_petd').value.trim(),mtype:isSpecial()?'특별회원':'일반회원',fee:isSpecial()?{plan:'연납',amount:300000,depositor:$('j_dep').value.trim()}:null,website:$('j_web').value,consent:{privacy:true,rules:true,notice:$('j_c3').checked}};
     btn.disabled=true;btn.textContent='신청 중…';
     fetch(API,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'join',form:form,sbtk:SESSION.access_token})}).then(function(r){return r.json();}).then(function(j){
       if(!j||!j.ok){btn.disabled=false;btn.textContent='가입 신청';if(j&&j.auth){SB&&SB.auth.signOut();showStart();return fail(j.error,$('jerr0'));}return fail((j&&j.error)||'잠시 후 다시 시도해 주세요.');}
       if(j.dup)$('jokmsg').textContent='이 카카오 계정은 이미 '+(j.name?j.name+' 님으로 ':'')+'등록되어 있어 새로 등록하지 않았습니다. 회원앱에서 카카오로 로그인하시면 됩니다.';
+      if(!j.dup&&isSpecial()){var a=$('jacct');$('jokmsg').innerHTML='특별회원으로 신청되었습니다. 연회비 <b>300,000원</b>을 '+(a.dataset.no?('<b>'+a.dataset.bank+' '+a.dataset.no+'</b> (예금주 '+a.dataset.holder+')로 '):'사무국이 안내하는 계좌로 ')+'보내 주시면 확인 후 특별회원으로 전환됩니다.';}
       f.style.display='none';$('jok').style.display='block';window.scrollTo({top:0,behavior:'smooth'});
     }).catch(function(){btn.disabled=false;btn.textContent='가입 신청';fail('연결에 실패했습니다. 잠시 후 다시 시도해 주세요.');});
   });
