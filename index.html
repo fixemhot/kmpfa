@@ -50,6 +50,11 @@ footer a:hover{color:#2A2724}
   nav a{display:block;padding:12px 0!important;border-bottom:1px solid #E2DCD0!important}
   .stats{grid-template-columns:1fr 1fr!important}
   .assoc{grid-template-columns:repeat(3,1fr)!important}
+  .works-sec{padding:0 0 48px!important}
+  .works{grid-template-columns:1fr 1fr!important}
+  .works .wk{border-left:0!important;border-top:1px solid #E2DCD0;padding:18px 16px 16px!important}
+  .works .wk:nth-child(-n+2){border-top:0}
+  .works .wk:nth-child(2n){border-left:1px solid #E2DCD0!important}
   .assoc>div{padding:22px 4px 18px!important}
   .assoc-go{grid-column:1/-1;border-left:0!important;border-top:1px solid #E2DCD0;justify-content:center;padding:14px 0!important}
   .cols{grid-template-columns:1fr!important;gap:36px!important}
@@ -117,7 +122,7 @@ footer a:hover{color:#2A2724}
 <div class="ticker" aria-label="최근 소식"><div class="in"><span class="lb">소식</span><div class="vp"><div class="tr" id="tk">
 <a href="news/hearing-result.html"><span>보도</span>양천구민 120여 명이 함께한 공청회… 의장·의원 7명 참석, 네 가지 쟁점 토론</a>
 <a href="news/policy-2026.html"><span>기획</span>정부, 연말까지 '찾아가는 반려동물 장례' 제도화… 지자체는 지금 준비해야</a>
-<a href="news/facility-gap.html"><span>기획</span>전국 83곳, 대전·제주는 0곳… 반려동물 장례도 ‘사는 곳’이 정한다</a>
+<a href="news/truthdaily-mobile-funeral.html"><span>보도</span>이동식 반려동물 장례 서비스 도입될 수 있을까</a>
 </div></div></div></div>
 <script>
 (function(){
@@ -219,7 +224,7 @@ footer a:hover{color:#2A2724}
 </section>
 <!-- ▲ 공청회 결과 끝 -->
 <!-- ▼ 협회 현황 (회원 수는 회원 명부와 자동 연동) -->
-<section style="padding:48px 0 64px">
+<section style="padding:48px 0 40px">
 <div class="wrap" style="max-width:1120px;margin:0 auto;padding:0 24px">
 <h2 style="font-family:'Nanum Myeongjo','Batang',serif;font-weight:700;line-height:1.3;margin:0 0 20px;letter-spacing:-.01em;color:#2A2724;font-size:clamp(1.45rem,2.6vw,2.05rem)">협회 회원 현황</h2>
 <div class="assoc" style="display:grid;grid-template-columns:repeat(3,1fr) auto;align-items:center;background:#FFFFFF;border:1px solid #E2DCD0;border-radius:6px">
@@ -229,12 +234,26 @@ footer a:hover{color:#2A2724}
 </div>
 </section>
 <!-- ▲ 협회 현황 끝 -->
+<!-- ▼ 협회가 하는 일 -->
+<section class="works-sec" style="padding:0 0 72px">
+<div class="wrap" style="max-width:1120px;margin:0 auto;padding:0 24px">
+<h2 style="font-family:'Nanum Myeongjo','Batang',serif;font-weight:700;line-height:1.3;margin:0;letter-spacing:-.01em;color:#2A2724;font-size:clamp(1.45rem,2.6vw,2.05rem);margin:0 0 20px">협회가 하는 일</h2>
+<div class="works" style="display:grid;grid-template-columns:repeat(4,1fr);background:#FFFFFF;border:1px solid #E2DCD0;border-radius:6px">
+<div class="wk" style="padding:26px 24px 22px;display:flex;flex-direction:column"><h3 style="font-family:'Nanum Myeongjo','Batang',serif;font-weight:700;line-height:1.3;margin:0;letter-spacing:-.01em;color:#2A2724;font-size:1.2rem;margin-top:2px">제도·입법</h3><p style="margin:10px 0 14px;color:#5C544A;font-size:.95rem;line-height:1.7;flex:1">지역 의회 청원, 입법예고 의견, 조례 제안으로 이동식 장례를 공공 모델로 제도화합니다.</p><a href="petition.html" style="color:#7A6247;font-weight:500;font-size:.92rem">청원 현황 →</a></div>
+<div class="wk" style="padding:26px 24px 22px;border-left:1px solid #E2DCD0;display:flex;flex-direction:column"><h3 style="font-family:'Nanum Myeongjo','Batang',serif;font-weight:700;line-height:1.3;margin:0;letter-spacing:-.01em;color:#2A2724;font-size:1.2rem;margin-top:2px">교육·자격</h3><p style="margin:10px 0 14px;color:#5C544A;font-size:.95rem;line-height:1.7;flex:1">운영 인력 표준교육과 안전 기준·직무 표준을 만들고, 민간자격 등록을 추진합니다.</p><a href="program.html" style="color:#7A6247;font-weight:500;font-size:.92rem">사업 안내 →</a></div>
+<div class="wk" style="padding:26px 24px 22px;border-left:1px solid #E2DCD0;display:flex;flex-direction:column"><h3 style="font-family:'Nanum Myeongjo','Batang',serif;font-weight:700;line-height:1.3;margin:0;letter-spacing:-.01em;color:#2A2724;font-size:1.2rem;margin-top:2px">통합창구</h3><p style="margin:10px 0 14px;color:#5C544A;font-size:.95rem;line-height:1.7;flex:1">장례확인서 전자 발급, 구청 통보, 동물등록 변경신고 안내를 한 흐름으로 처리합니다.</p><a href="portal.html" style="color:#7A6247;font-weight:500;font-size:.92rem">통합창구 →</a></div>
+<div class="wk" style="padding:26px 24px 22px;border-left:1px solid #E2DCD0;display:flex;flex-direction:column"><h3 style="font-family:'Nanum Myeongjo','Batang',serif;font-weight:700;line-height:1.3;margin:0;letter-spacing:-.01em;color:#2A2724;font-size:1.2rem;margin-top:2px">공익활동</h3><p style="margin:10px 0 14px;color:#5C544A;font-size:.95rem;line-height:1.7;flex:1">취약계층 지원, 무료 교육, 주민 공청회를 연간 계획에 따라 꾸준히 합니다.</p><a href="activity.html" style="color:#7A6247;font-weight:500;font-size:.92rem">활동 계획 →</a></div>
+</div>
+</div>
+</section>
+<!-- ▲ 협회가 하는 일 끝 -->
 <section class="paper" style="padding:88px 0;background:#FFFFFF">
 <div class="wrap cols" style="max-width:1120px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start">
 <div>
-<h2 style="font-family:'Nanum Myeongjo','Batang',serif;font-weight:700;line-height:1.3;margin:0;letter-spacing:-.01em;color:#2A2724;font-size:clamp(1.45rem,2.6vw,2.05rem)">가족처럼 지냈지만,<br/>마지막은 제도 밖에 있습니다</h2>
-<p class="lead" style="margin-top:20px;margin:0 0 1.1em;max-width:66ch;font-size:1.1rem;color:#2A2724">현행법상 반려동물 사체는 생활폐기물 또는 의료폐기물입니다. 집에서 세상을 떠나면 종량제 봉투에 배출하거나, 동물병원에 맡겨 의료폐기물로 소각하는 것이 현행 절차입니다.</p>
+<h2 style="font-family:'Nanum Myeongjo','Batang',serif;font-weight:700;line-height:1.3;margin:0;letter-spacing:-.01em;color:#2A2724;font-size:clamp(1.45rem,2.6vw,2.05rem)">가족처럼 지냈지만,<br/>마지막은 아직 제도 밖에 있습니다</h2>
+<p class="lead" style="margin-top:20px;margin:0 0 1.1em;max-width:66ch;font-size:1.1rem;color:#2A2724">반려동물이 세상을 떠나면 보호자가 택할 수 있는 길은 장묘업체 화장, 종량제 배출, 동물병원 위탁뿐입니다. 서울 시내에 화장시설은 사실상 없고, 비용과 거리 때문에 열에 네 가구는 땅에 묻는 것으로 조사됐습니다(농림축산식품부 2025 동물복지 국민의식조사).</p>
 <p style="margin:0 0 1.1em;max-width:66ch">화장을 원해도 시설은 도심 밖에 있고 가격은 업체마다 다릅니다. 비용과 거리를 감당하기 어려운 보호자는 결국 적절한 처리 방법을 찾지 못하는 경우가 생깁니다. 그 뒤처리는 다시 지자체 몫이 됩니다.</p>
+<p style="margin:0 0 1.1em;max-width:66ch">2026년 10월 19일 농림축산식품부가 자동차를 이용한 화장시설을 동물장묘업에 포함하는 시행규칙 개정안을 입법예고했습니다. 이제 질문은 ‘허용할 것인가’가 아니라 ‘어떤 기준으로, 누구를 위해 운영할 것인가’입니다.</p>
 <p style="margin:0 0 1.1em;max-width:66ch"><a href="program.html" style="color:#7A6247;text-decoration:underline;text-underline-offset:.22em;text-decoration-thickness:1px">왜 이 사업이 필요한지 자세히 보기</a></p>
 </div>
 <!-- ══════════════════════════════════════════════════
@@ -275,8 +294,8 @@ footer a:hover{color:#2A2724}
 <ul class="plist" style="list-style:none;margin:0;padding:0;border-top:1px solid #E2DCD0">
 <li style="padding:28px 0;border-bottom:1px solid #E2DCD0;display:grid;grid-template-columns:220px 1fr;gap:24px"><h3 style="font-family:'Nanum Myeongjo','Batang',serif;font-weight:700;line-height:1.3;margin:0;letter-spacing:-.01em;color:#2A2724;font-size:1.2rem;margin-top:2px">예산 재편성</h3><p style="margin:0 0 1.1em;max-width:66ch;margin:0;max-width:none">흩어진 처리 예산을 통합해 운영합니다. 양천구 기준 연간 약 9천만 원이 이미 지출되고 있습니다.</p></li>
 <li style="padding:28px 0;border-bottom:1px solid #E2DCD0;display:grid;grid-template-columns:220px 1fr;gap:24px"><h3 style="font-family:'Nanum Myeongjo','Batang',serif;font-weight:700;line-height:1.3;margin:0;letter-spacing:-.01em;color:#2A2724;font-size:1.2rem;margin-top:2px">공유재산 등록</h3><p style="margin:0 0 1.1em;max-width:66ch;margin:0;max-width:none">차량과 설비는 지자체 소유로 등록합니다. 운영자가 바뀌어도 사업은 이어집니다.</p></li>
-<li style="padding:28px 0;border-bottom:1px solid #E2DCD0;display:grid;grid-template-columns:220px 1fr;gap:24px"><h3 style="font-family:'Nanum Myeongjo','Batang',serif;font-weight:700;line-height:1.3;margin:0;letter-spacing:-.01em;color:#2A2724;font-size:1.2rem;margin-top:2px">공개 공모</h3><p style="margin:0 0 1.1em;max-width:66ch;margin:0;max-width:none">경쟁 입찰로 운영자를 선정합니다. 지역 소상공인이 맡으면 일자리도 지역에 남습니다.</p></li>
-<li style="padding:28px 0;border-bottom:1px solid #E2DCD0;display:grid;grid-template-columns:220px 1fr;gap:24px"><h3 style="font-family:'Nanum Myeongjo','Batang',serif;font-weight:700;line-height:1.3;margin:0;letter-spacing:-.01em;color:#2A2724;font-size:1.2rem;margin-top:2px">취약계층 지원</h3><p style="margin:0 0 1.1em;max-width:66ch;margin:0;max-width:none">독거노인과 기초생활수급자는 무료 또는 감면합니다. 비용 때문에 불법 투기로 내몰리던 사각지대를 메웁니다.</p></li>
+<li style="padding:28px 0;border-bottom:1px solid #E2DCD0;display:grid;grid-template-columns:220px 1fr;gap:24px"><h3 style="font-family:'Nanum Myeongjo','Batang',serif;font-weight:700;line-height:1.3;margin:0;letter-spacing:-.01em;color:#2A2724;font-size:1.2rem;margin-top:2px">공개 공모</h3><p style="margin:0 0 1.1em;max-width:66ch;margin:0;max-width:none">경쟁 입찰로 운영자를 선정하고, 운영 인력은 지역 주민을 채용합니다. 지역 소상공인이 맡으면 일자리도 지역에 남습니다.</p></li>
+<li style="padding:28px 0;border-bottom:1px solid #E2DCD0;display:grid;grid-template-columns:220px 1fr;gap:24px"><h3 style="font-family:'Nanum Myeongjo','Batang',serif;font-weight:700;line-height:1.3;margin:0;letter-spacing:-.01em;color:#2A2724;font-size:1.2rem;margin-top:2px">취약계층 지원</h3><p style="margin:0 0 1.1em;max-width:66ch;margin:0;max-width:none">독거노인과 기초생활수급자는 무료 또는 감면합니다. 비용 때문에 장례를 포기하는 가구가 없도록 합니다.</p></li>
 </ul>
 </div>
 </section>
@@ -303,12 +322,14 @@ footer a:hover{color:#2A2724}
 </div>
 </div>
 <div class="gal" id="gal"><div class="gtr"><div class="gset">
+<a class="gcard" href="news/truthdaily-mobile-funeral.html"><img src="images/slide2-pc.jpeg" alt="" width="2400" height="1350" loading="lazy"><span class="gb">언론 보도 · 트루스데일리</span><span class="gt">이동식 반려동물 장례 서비스 도입될 수 있을까</span></a>
 <a class="gcard" href="news/hearing-result.html"><img src="images/hearing-audience.jpg" alt="" width="1600" height="1068" loading="lazy"><span class="gb">보도</span><span class="gt">양천구민 120여 명이 함께한 공청회… 의장·의원 7명 참석, 네 가지 쟁점 토론</span></a>
 <a class="gcard" href="news/policy-2026.html"><img src="images/news/policy-2026-1.jpg" alt="" width="1280" height="716" loading="lazy"><span class="gb">기획</span><span class="gt">정부, 연말까지 '찾아가는 반려동물 장례' 제도화… 지자체는 지금 준비해야</span></a>
 <a class="gcard" href="news/hearing.html"><img src="images/news/hearing-1.jpg" alt="" width="1024" height="1536" loading="lazy"><span class="gb">공지</span><span class="gt">양천구 이동식 화장차 도입 공청회 개최 안내</span></a>
 <a class="gcard" href="news/system.html"><img src="images/news/system.jpg" alt="" width="1600" height="1200" loading="lazy"><span class="gb">기획</span><span class="gt">반려동물 마지막 가는 길, 제도는 어디에</span></a>
 <a class="gcard" href="news/founding.html"><img src="images/news/founding.jpg" alt="" width="1600" height="873" loading="lazy"><span class="gb">언론 보도 · jyn.kr</span><span class="gt">한국반려동물이동장례협회 창립… 이동식 화장차 지자체 도입 추진</span></a>
 </div><div class="gset" aria-hidden="true">
+<a class="gcard" href="news/truthdaily-mobile-funeral.html"><img src="images/slide2-pc.jpeg" alt="" width="2400" height="1350" loading="lazy"><span class="gb">언론 보도 · 트루스데일리</span><span class="gt">이동식 반려동물 장례 서비스 도입될 수 있을까</span></a>
 <a class="gcard" href="news/hearing-result.html"><img src="images/hearing-audience.jpg" alt="" width="1600" height="1068" loading="lazy"><span class="gb">보도</span><span class="gt">양천구민 120여 명이 함께한 공청회… 의장·의원 7명 참석, 네 가지 쟁점 토론</span></a>
 <a class="gcard" href="news/policy-2026.html"><img src="images/news/policy-2026-1.jpg" alt="" width="1280" height="716" loading="lazy"><span class="gb">기획</span><span class="gt">정부, 연말까지 '찾아가는 반려동물 장례' 제도화… 지자체는 지금 준비해야</span></a>
 <a class="gcard" href="news/hearing.html"><img src="images/news/hearing-1.jpg" alt="" width="1024" height="1536" loading="lazy"><span class="gb">공지</span><span class="gt">양천구 이동식 화장차 도입 공청회 개최 안내</span></a>
@@ -339,7 +360,8 @@ footer a:hover{color:#2A2724}
 <div class="wrap cols" style="max-width:1120px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:1fr 1.35fr;gap:48px;align-items:start">
 <div>
 <h2 style="font-family:'Nanum Myeongjo','Batang',serif;font-weight:700;line-height:1.3;margin:0;letter-spacing:-.01em;color:#2A2724;font-size:clamp(1.45rem,2.6vw,2.05rem);display:flex;align-items:center;gap:12px;"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#7A6247" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 11h6M9 14h6"/><path d="M8.5 18.5c1.5-2.2 2.4-2.2 2.8 0 .4 2.2 1.3 2.2 2.6-.4.8-1.6 1.6-1.6 2.6 0"/></svg><span>청원 진행 현황</span></h2>
-<p style="margin-top:20px;margin:0 0 1.1em;max-width:66ch">서울 양천구에서 주민 300명의 서명을 받아 청원 준비를 마쳤습니다. 10월 20일 양천구민 120여 명과 함께 공청회를 열었고, 의견을 정리해 청원서와 함께 양천구의회에 제출합니다.</p>
+<p style="margin-top:20px;margin:0 0 1.1em;max-width:66ch">서울 양천구에서 주민 300명의 서명을 받아 10월 20일 양천구민 120여 명과 함께 공청회를 열고, 같은 날 청원서를 양천구의회에 제출했습니다.</p>
+<p style="margin:0 0 1.1em;max-width:66ch">11월에는 농림축산식품부 입법예고에 작업 장소 기준·운영 인력 교육·기록 전산화·설비 안전·공공 협력 다섯 가지 보완 의견을 제출합니다.</p>
 <p style="margin:0 0 1.1em;max-width:66ch">서초구, 송파구, 강서구, 경기 남양주시, 대구광역시 9개 구·군에서도 서명을 받고 있습니다.</p>
 <p style="margin:0 0 1.1em;max-width:66ch"><a href="petition.html" style="color:#7A6247;text-decoration:underline;text-underline-offset:.22em;text-decoration-thickness:1px">지역별 현황 보기</a></p>
 </div>
