@@ -1618,7 +1618,7 @@
     var body=cats.filter(function(c){return by[c]&&by[c].length;}).map(function(c){
       return '<div class="lib-cat">'+esc(c)+' <span>'+by[c].length+'</span></div>'+by[c].map(function(x){
         return '<div class="lib-row"><a class="lib-a" data-lurl="'+esc(x.url||"")+'">'+esc(x.title||x.name||"자료")+'</a>'
-          +(x.scope==="officer"?'<span class="lib-b">임원만</span>':'')
+          +(x.scope==="officer"?'<span class="lib-b">임원만</span>':(x.scope==="special"?'<span class="lib-b">특별회원 이상</span>':''))
           +'<span class="lib-d">'+esc(x.at?fmtK(x.at):"")+'</span>'
           +(adm?'<button class="fbtn" data-ledit="'+esc(x.id)+'">수정</button><button class="fbtn warn" data-ldel="'+esc(x.id)+'">삭제</button>':'')
           +'</div>';
@@ -1636,7 +1636,7 @@
     el.querySelectorAll("[data-ledit]").forEach(function(b){b.addEventListener("click",function(){openLibEdit(b.getAttribute("data-ledit"));});});
   }
   function libCatOpts(sel){return LIB_CATS.map(function(c){return '<option'+(c===sel?' selected':'')+'>'+esc(c)+'</option>';}).join("");}
-  function libScopeOpts(sel){return '<option value="all"'+(sel!=="officer"?' selected':'')+'>전체 회원</option><option value="officer"'+(sel==="officer"?' selected':'')+'>임원만</option>';}
+  function libScopeOpts(sel){return '<option value="all"'+(sel!=="officer"&&sel!=="special"?' selected':'')+'>전체 회원</option><option value="special"'+(sel==="special"?' selected':'')+'>특별회원 이상 (교재·내부 자료)</option><option value="officer"'+(sel==="officer"?' selected':'')+'>임원만</option>';}
   function openLibUpload(){
     openSheet('<h3>📁 자료 올리기</h3>'
       +'<div class="field"><label>분류</label><select id="lbCat">'+libCatOpts(LIB_CATS[0])+'</select></div>'
