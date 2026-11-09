@@ -1254,6 +1254,16 @@ async function handleGet(c, p) {
       item: o
     });
   }
+  // (11/9) 홈페이지용 공개 통계: 회원 수만 (개인정보 없음)
+  if (api === "stats") {
+    const live = (await c.rows("emp")).filter((x)=>String(x.status) !== "퇴사" && String(x.status) !== "입사예정");
+    return json({
+      ok: true,
+      members: live.length,
+      officers: live.filter((x)=>OFFICER_RE.test(String(x.role || ""))).length,
+      at: today()
+    });
+  }
   if (api === "install") {
     const info = await apkInfo(c);
     if (!info || !info.id) return json({
