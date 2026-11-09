@@ -1350,7 +1350,7 @@ async function handlePost(c, body) {
     if (!au) return { ok: false, auth: true, error: "카카오 로그인이 확인되지 않았습니다. 다시 카카오로 로그인해 주세요." };
     const linked = (await c.rows("emp")).filter((x)=>String(x.authUid || "") === au.uid && String(x.status) !== "퇴사");
     if (linked.length) return { ok: true, joined: true, dup: true, name: linked[0].name };
-    const name = (au.name || str(f.name, 20)).replace(/\s+/g, " ");
+    const name = (str(f.name, 20) || au.name).replace(/\s+/g, " "); // 실명은 본인 입력 우선(카카오 닉네임은 참고용)
     const digits = au.phone && au.phone.length >= 10 ? au.phone : String(f.phone || "").replace(/\D/g, "");
     const phone = digits.length === 11 ? digits.replace(/(\d{3})(\d{4})(\d{4})/, "$1-$2-$3") : digits.length === 10 ? digits.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3") : "";
     const email = au.email || str(f.email, 80);
@@ -1374,7 +1374,7 @@ async function handlePost(c, body) {
       consent: { privacy: true, rules: true, notice: consent.notice === true },
       referrer: "natural", refName: "자연 유입", applyDate: d, src: "web",
       authUid: au.uid, authProvider: "kakao", authEmail: au.email, authNick: au.nick,
-      verified: { kakao: true, email: !!(au.email && au.emailVerified), phone: !!(au.phone && au.phone.length >= 10), name: !!au.name }
+      verified: { kakao: true, email: !!(au.email && au.emailVerified), phone: !!(au.phone && au.phone.length >= 10), name: false }
     };
     must(await sb.from("employees").insert({ id: eid, data: em }));
     return { ok: true, joined: true, name };
