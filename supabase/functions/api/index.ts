@@ -96,6 +96,7 @@ const FORM_SLOTS = [
 ];
 const PUBLIC_ACTIONS = {
   login: 1,
+  join: 1,
   adminSetup: 1,
   apApprove: 1,
   hireUpload: 1
@@ -1313,6 +1314,44 @@ async function handlePost(c, body) {
   const isMgr = !!who && who.role === "manager";
   const mgrOwn = (row)=>String(row.site) === String(W.site) && String(row.createdRole) === "manager" && !row.role1By && !row.role2By;
   const TEST = await c.testMode();
+  // ============ (11/9) 홈페이지 일반회원 가입 신청 (로그인 없이) ============
+  if (a === "join") {
+    const f = body.form || {};
+    const str = (v, n)=>String(v == null ? "" : v).replace(/[\u0000-\u001f<>]/g, "").trim().slice(0, n);
+    if (str(f.website, 50)) return { ok: true, joined: true }; // 봇용 숨은 칸
+    const ip = String(body._ip || "").replace(/[^0-9a-fA-F.:]/g, "").slice(0, 45) || "none";
+    const jk = "join_" + ip;
+    if (await failCheck(jk)) return {
+      ok: false,
+      error: "같은 곳에서 가입 신청이 너무 많습니다. 10분 뒤 다시 시도해 주세요."
+    };
+    const name = str(f.name, 20).replace(/\s+/g, " ");
+    const digits = String(f.phone || "").replace(/\D/g, "");
+    const phone = digits.length === 11 ? digits.replace(/(\d{3})(\d{4})(\d{4})/, "$1-$2-$3") : digits.length === 10 ? digits.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3") : "";
+    const email = str(f.email, 80);
+    const consent = f.consent || {};
+    if (name.length < 2) return { ok: false, error: "성명을 입력해 주세요." };
+    if (!phone || !/^01/.test(digits)) return { ok: false, error: "휴대전화 번호를 숫자 10~11자리로 입력해 주세요." };
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, error: "이메일 형식을 확인해 주세요." };
+    if (consent.privacy !== true || consent.rules !== true) return { ok: false, error: "개인정보 수집·이용과 회칙 준수에 동의해야 가입할 수 있습니다." };
+    await failAdd(jk);
+    const same = (await c.rows("emp")).filter((x)=>String(x.status) !== "퇴사" && last4(x.phone) === last4(phone) && String(x.phone || "").replace(/\D/g, "") === digits);
+    if (same.length) return { ok: true, joined: true, dup: true };
+    const petv = str(f.pet, 10) === "있음" ? ("있음 " + str(f.petd, 60)).trim() : "없음";
+    const d = today();
+    const eid = Date.now().toString(36) + rid(5);
+    const em = {
+      id: eid, name, role: "회원", team: "", work: "", gender: /^(남|여)$/.test(str(f.gender, 2)) ? str(f.gender, 2) : "",
+      phone, joinDate: d, leaveDate: "", status: "재직", certs: "", base: 0, allow: 0, ot: 0, paySum: 0, annual: 0, sev: 0, total: 0,
+      memo: "홈페이지에서 직접 가입 신청", site: DEFAULT_SITE, birth: "", deps: "", attachments: [], leavePlan: "",
+      email, addr: str(f.addr, 120), job: str(f.job, 60), pet: petv,
+      mtype: /^(일반회원|특별회원)$/.test(str(f.mtype, 10)) ? str(f.mtype, 10) : "일반회원",
+      consent: { privacy: true, rules: true, notice: consent.notice === true },
+      referrer: "natural", refName: "자연 유입", applyDate: d, src: "web"
+    };
+    must(await sb.from("employees").insert({ id: eid, data: em }));
+    return { ok: true, joined: true };
+  }
   // ============ 로그인 ============
   if (a === "login") {
     const mode = String(body.mode || "");
@@ -2579,7 +2618,9 @@ Deno.serve(async (req)=>{
           error: "요청 형식이 올바르지 않습니다."
         });
       }
-      return json(await handlePost(c, body || {}));
+      body = body || {};
+      body._ip = String(req.headers.get("x-forwarded-for") || "").split(",")[0].trim();
+      return json(await handlePost(c, body));
     }
     return json({
       ok: false,
