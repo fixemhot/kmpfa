@@ -1368,9 +1368,10 @@ async function handlePost(c, body) {
     const em = {
       id: eid, name, role: "회원", team: "", work: "", gender: /^(남|여)$/.test(str(f.gender, 2)) ? str(f.gender, 2) : "",
       phone, joinDate: d, leaveDate: "", status: "재직", certs: "", base: 0, allow: 0, ot: 0, paySum: 0, annual: 0, sev: 0, total: 0,
-      memo: "홈페이지에서 직접 가입 신청", site: DEFAULT_SITE, birth: "", deps: "", attachments: [], leavePlan: "",
+      memo: str(f.mtype, 10) === "특별회원" ? ("홈페이지에서 직접 가입 신청 · 특별회원 신청(연납 30만) · 입금 확인 대기" + (str(f.fee && f.fee.depositor, 20) ? " · 입금자 " + str(f.fee.depositor, 20) : "")) : "홈페이지에서 직접 가입 신청", site: DEFAULT_SITE, birth: "", deps: "", attachments: [], leavePlan: "",
       email, addr: str(f.addr, 120), job: str(f.job, 60), pet: petv,
       mtype: /^(일반회원|특별회원)$/.test(str(f.mtype, 10)) ? str(f.mtype, 10) : "일반회원",
+      fee: f.fee && typeof f.fee === "object" ? { plan: str(f.fee.plan, 10) || "연납", amount: Number(f.fee.amount) || 300000, depositor: str(f.fee.depositor, 20), paid: false, appliedAt: d } : null,
       consent: { privacy: true, rules: true, notice: consent.notice === true },
       referrer: "natural", refName: "자연 유입", applyDate: d, src: "web",
       authUid: au.uid, authProvider: "kakao", authEmail: au.email, authNick: au.nick,
