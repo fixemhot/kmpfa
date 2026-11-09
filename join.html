@@ -199,7 +199,7 @@ footer a:hover{color:#2A2724}
   $('kbtn').addEventListener('click',function(){
     if(!SB)return fail('로그인 모듈을 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.',$('jerr0'));
     this.disabled=true;
-    SB.auth.signInWithOAuth({provider:'kakao',options:{redirectTo:location.origin+'/join.html'}}).then(function(r){if(r&&r.error){$('kbtn').disabled=false;fail('카카오 로그인을 시작하지 못했습니다: '+r.error.message,$('jerr0'));}});
+    SB.auth.signInWithOAuth({provider:'kakao',options:{redirectTo:location.origin+'/join.html',scopes:'profile_nickname'}}).then(function(r){if(r&&r.error){$('kbtn').disabled=false;fail('카카오 로그인을 시작하지 못했습니다: '+r.error.message,$('jerr0'));}});
   });
   $('jswitch').addEventListener('click',function(ev){ev.preventDefault();if(SB)SB.auth.signOut().then(function(){SESSION=null;showStart();});});
   if(SB){
