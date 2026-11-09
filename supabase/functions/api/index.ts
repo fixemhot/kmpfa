@@ -97,6 +97,7 @@ const FORM_SLOTS = [
 const PUBLIC_ACTIONS = {
   login: 1,
   join: 1,
+  linkKakao: 1,
   adminSetup: 1,
   apApprove: 1,
   hireUpload: 1
@@ -165,6 +166,25 @@ function normName(s) {
 }
 function last4(s) {
   return String(s || "").replace(/\D/g, "").slice(-4);
+}
+// (11/9) 카카오 로그인 확인: 화면이 보낸 Supabase Auth 토큰(sbtk)을 Supabase에 물어 실제 로그인한 사람인지 확인.
+// 돌려주는 값: { uid, email, emailVerified, phone, name, nick } — 카카오가 준 것만 채워짐.
+async function authUserOf(sbtk) {
+  const t = String(sbtk || "");
+  if (!t || t.length < 20) return null;
+  const { data, error } = await sb.auth.getUser(t);
+  if (error || !data || !data.user) return null;
+  const u = data.user, m = u.user_metadata || {}, prov = String((u.app_metadata || {}).provider || "");
+  const ids = (u.identities || []).map((i)=>String(i.provider || ""));
+  if (prov !== "kakao" && ids.indexOf("kakao") < 0) return null;
+  return {
+    uid: String(u.id),
+    email: String(u.email || m.email || ""),
+    emailVerified: !!(u.email_confirmed_at || m.email_verified),
+    phone: String(u.phone || m.phone_number || m.phone || "").replace(/^\+82/, "0").replace(/\D/g, ""),
+    name: String(m.name || m.full_name || "").trim(),
+    nick: String(m.nickname || m.preferred_username || m.user_name || "").trim()
+  };
 }
 function must(r) {
   if (r.error) throw new Error(r.error.message || String(r.error));
@@ -1325,10 +1345,15 @@ async function handlePost(c, body) {
       ok: false,
       error: "같은 곳에서 가입 신청이 너무 많습니다. 10분 뒤 다시 시도해 주세요."
     };
-    const name = str(f.name, 20).replace(/\s+/g, " ");
-    const digits = String(f.phone || "").replace(/\D/g, "");
+    // (11/9) 카카오 로그인 필수 — 본인 확인 없이 받은 가입은 거절
+    const au = await authUserOf(body.sbtk);
+    if (!au) return { ok: false, auth: true, error: "카카오 로그인이 확인되지 않았습니다. 다시 카카오로 로그인해 주세요." };
+    const linked = (await c.rows("emp")).filter((x)=>String(x.authUid || "") === au.uid && String(x.status) !== "퇴사");
+    if (linked.length) return { ok: true, joined: true, dup: true, name: linked[0].name };
+    const name = (au.name || str(f.name, 20)).replace(/\s+/g, " ");
+    const digits = au.phone && au.phone.length >= 10 ? au.phone : String(f.phone || "").replace(/\D/g, "");
     const phone = digits.length === 11 ? digits.replace(/(\d{3})(\d{4})(\d{4})/, "$1-$2-$3") : digits.length === 10 ? digits.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3") : "";
-    const email = str(f.email, 80);
+    const email = au.email || str(f.email, 80);
     const consent = f.consent || {};
     if (name.length < 2) return { ok: false, error: "성명을 입력해 주세요." };
     if (!phone || !/^01/.test(digits)) return { ok: false, error: "휴대전화 번호를 숫자 10~11자리로 입력해 주세요." };
@@ -1347,14 +1372,44 @@ async function handlePost(c, body) {
       email, addr: str(f.addr, 120), job: str(f.job, 60), pet: petv,
       mtype: /^(일반회원|특별회원)$/.test(str(f.mtype, 10)) ? str(f.mtype, 10) : "일반회원",
       consent: { privacy: true, rules: true, notice: consent.notice === true },
-      referrer: "natural", refName: "자연 유입", applyDate: d, src: "web"
+      referrer: "natural", refName: "자연 유입", applyDate: d, src: "web",
+      authUid: au.uid, authProvider: "kakao", authEmail: au.email, authNick: au.nick,
+      verified: { kakao: true, email: !!(au.email && au.emailVerified), phone: !!(au.phone && au.phone.length >= 10), name: !!au.name }
     };
     must(await sb.from("employees").insert({ id: eid, data: em }));
-    return { ok: true, joined: true };
+    return { ok: true, joined: true, name };
+  }
+  // ============ (11/9) 기존 회원이 카카오 계정을 처음 연결할 때: 카카오 로그인 + 이름 + 휴대폰 뒷 4자리 ============
+  if (a === "linkKakao") {
+    const au = await authUserOf(body.sbtk);
+    if (!au) return { ok: false, auth: true, error: "카카오 로그인이 확인되지 않았습니다. 다시 카카오로 로그인해 주세요." };
+    const lk = "link_" + au.uid;
+    if (await failCheck(lk)) return { ok: false, error: "여러 번 틀려서 10분간 잠겼습니다. 잠시 후 다시 시도해 주세요." };
+    const nm = normName(body.name), pw = String(body.pw || "").replace(/\D/g, "");
+    if (!nm || pw.length !== 4) return { ok: false, error: "이름과 휴대폰 번호 뒷자리 4자리를 입력해 주세요." };
+    const emps = await c.rows("emp");
+    if (emps.some((x)=>String(x.authUid || "") === au.uid && String(x.status) !== "퇴사")) return { ok: false, error: "이 카카오 계정은 이미 다른 회원과 연결되어 있습니다." };
+    const hit = emps.filter((x)=>normName(x.name) === nm && String(x.status) !== "퇴사" && last4(x.phone) === pw)[0];
+    if (!hit) { await failAdd(lk); return { ok: false, error: "이름 또는 휴대폰 번호 뒷자리가 맞지 않습니다. 회원 명부에 등록된 이름과 번호여야 해요." }; }
+    if (hit.authUid && String(hit.authUid) !== au.uid) return { ok: false, error: "이 회원은 이미 다른 카카오 계정과 연결되어 있습니다. 사무국에 문의해 주세요." };
+    await failClear(lk);
+    const upd = { ...hit, authUid: au.uid, authProvider: "kakao", authEmail: au.email, authNick: au.nick, authLinkedAt: today() };
+    must(await sb.from("employees").update({ data: upd }).eq("id", hit.id));
+    const role = OFFICER_RE.test(String(hit.role || "")) ? "manager" : "staff";
+    return { ok: true, tk: await c.makeTk(role, hit.id), role, name: hit.name, site: String(hit.site || DEFAULT_SITE), linked: true };
   }
   // ============ 로그인 ============
   if (a === "login") {
     const mode = String(body.mode || "");
+    // (11/9) 카카오 로그인: 연결된 회원이면 직책에 따라 임원/일반회원 토큰. 연결이 없으면 link:true 로 알려 연결 화면을 띄움.
+    if (mode === "kakao") {
+      const au = await authUserOf(body.sbtk);
+      if (!au) return { ok: false, auth: true, error: "카카오 로그인이 확인되지 않았습니다. 다시 카카오로 로그인해 주세요." };
+      const hit = (await c.rows("emp")).filter((x)=>String(x.authUid || "") === au.uid && String(x.status) !== "퇴사")[0];
+      if (!hit) return { ok: false, link: true, error: "이 카카오 계정과 연결된 회원이 아직 없습니다.", nick: au.nick, name: au.name };
+      const role = OFFICER_RE.test(String(hit.role || "")) ? "manager" : "staff";
+      return { ok: true, tk: await c.makeTk(role, hit.id), role, name: hit.name, site: String(hit.site || DEFAULT_SITE) };
+    }
     if (mode === "staff") {
       // (10/27) 비밀번호 = 직원 명부 휴대폰 번호 뒷자리 4자리 (pw). 예전 화면(birth)도 당분간 받아 줌.
       const nm = normName(body.name), bd = String(body.birth || "").replace(/\D/g, ""), pw = String(body.pw || "").replace(/\D/g, "");
