@@ -1,14 +1,9 @@
 # 서버(Supabase Edge Function "api") 자동 배포
-# supabase/functions/api/ 아래 파일이 main 에 올라오면 자동으로 배포합니다.
+# 코드를 올려 둔 뒤, 사람이 Actions 화면에서 "Run workflow"를 눌러야 배포됩니다 (운영 서버 반영은 사람이 직접).
 # 필요한 비밀값: 저장소 Settings → Secrets → Actions → SUPABASE_ACCESS_TOKEN
 name: Deploy server (api)
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "supabase/functions/api/**"
-      - "supabase/config.toml"
   workflow_dispatch:
 
 concurrency:
