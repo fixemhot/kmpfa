@@ -210,6 +210,10 @@
   .hub-card .hic{font-size:52px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,.2));}
   .lg-back{display:inline-flex;align-items:center;gap:4px;border:1px solid #DCDFEA;background:#fff;color:#2A2724;font-weight:800;font-size:13.5px;border-radius:999px;padding:7px 14px;margin:0 0 14px;cursor:pointer;font-family:inherit;}
   .lg-sec{font-size:18px;font-weight:800;color:#2A2724;margin:0 0 12px 2px;}
+  .kbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;box-sizing:border-box;font:inherit;font-size:16px;font-weight:800;color:#191919;background:#FEE500;border:0;border-radius:14px;padding:16px 18px;cursor:pointer;box-shadow:0 4px 14px rgba(33,45,100,.10)}
+  .kbtn[disabled]{opacity:.6}
+  .lg-or{display:flex;align-items:center;gap:12px;color:#9A9A90;font-size:12.5px;margin:18px 0 14px}.lg-or:before,.lg-or:after{content:"";flex:1;height:1px;background:#E2DCD0}
+  #lgKakao{margin-bottom:4px}
   .lg-card{position:relative;width:100%;height:112px;display:block;text-align:left;border:none;border-radius:20px;margin-bottom:14px;cursor:pointer;font-family:inherit;overflow:hidden;padding:0;background:#fff;box-shadow:0 4px 14px rgba(33,45,100,.12);}
   .lg-card:active{transform:scale(.985);}
   .lg-card .ph{position:absolute;top:0;right:0;bottom:0;width:58%;background-size:cover;background-repeat:no-repeat;}
@@ -461,6 +465,12 @@
     </div>
     <div id="lgPick">
       <button class="lg-back" id="pickBack" style="display:none">‹ 뒤로</button>
+      <div id="lgKakao">
+        <button class="kbtn" id="kakaoBtn" type="button"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path fill="#191919" d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.8 5.2 4.6 6.6L5.5 21c-.1.3.2.5.5.4l4.5-3c.5.1 1 .1 1.5.1 5.5 0 10-3.6 10-8S17.5 3 12 3z"/></svg>카카오로 로그인</button>
+        <div style="font-size:12.5px;color:#8A8278;text-align:center;margin-top:9px;line-height:1.55">임원·일반회원 모두 — 카카오 계정 하나로 들어갑니다.<br>처음이면 이름과 휴대폰 뒷자리로 한 번만 연결합니다.</div>
+        <div class="err hide" id="kkErr" style="margin-top:10px"></div>
+        <div class="lg-or">또는 이름·뒷자리로</div>
+      </div>
       <div class="lg-sec">누구로 들어오세요?</div>
       <button class="lg-card" data-lg="staff"><span class="ph" style="background:#F1ECE3;display:flex;align-items:center;justify-content:center;font-size:34px">🐾</span><span class="tx"><b>일반회원</b><small>공지 · 기안서 · 서류 제출</small><span class="go">들어가기 ›</span></span></button>
       <button class="lg-card" data-lg="manager"><span class="ph" style="background:#F1ECE3;display:flex;align-items:center;justify-content:center;font-size:34px">📋</span><span class="tx"><b>임원</b><small>지출 입력 · 공지 · 기안서 결재</small><span class="go">들어가기 ›</span></span></button>
@@ -476,6 +486,15 @@
       <div id="lgPin2F" class="field hide"><label>한 번 더 입력</label><input id="lgPin2" type="password" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off" /></div>
       <div class="err hide" id="lgErr" style="margin:0 0 12px"></div>
       <div class="btns"><button class="btn ghost" id="lgBack">뒤로</button><button class="btn primary" id="lgGo">들어가기</button></div>
+    </div>
+    <div id="lgLink" class="lg-form hide">
+      <div class="lg-h">카카오 계정 처음 연결</div>
+      <div style="font-size:13.5px;color:#5C544A;line-height:1.6;margin:-4px 0 14px">이 카카오 계정(<b id="lkNick"></b>)과 연결된 회원이 아직 없습니다. 회원 명부에 등록된 이름과 휴대폰 번호 뒷자리를 넣으면 연결되고, 다음부터는 카카오 버튼만 누르면 됩니다.</div>
+      <div class="field"><label>이름</label><input id="lkName" placeholder="홍길동" autocomplete="off" /></div>
+      <div class="field"><label>휴대폰 번호 뒷자리 4자리</label><input id="lkPw" type="password" inputmode="numeric" maxlength="4" placeholder="예) 010-1234-5678 → 5678" autocomplete="off" /></div>
+      <div style="font-size:12.5px;color:#868C94;margin:-6px 0 12px;line-height:1.5">아직 회원이 아니면 <a href="../join.html" style="color:#7A6247;font-weight:700">홈페이지 회원 가입</a>에서 카카오로 가입해 주세요.</div>
+      <div class="err hide" id="lkErr" style="margin:0 0 12px"></div>
+      <div class="btns"><button class="btn ghost" id="lkBack">취소</button><button class="btn primary" id="lkGo">연결하고 들어가기</button></div>
     </div>
     <div class="lg-foot"><b style="color:#2A2724;font-size:12.5px">한국반려동물이동장례협회</b><br>Korea Mobile Pet Funeral Association<br><a href="../" style="color:#7A6247;font-weight:700;text-decoration:none">kmpfa.or.kr</a></div>
   </div>
@@ -779,6 +798,7 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
 <script>
 (function(){
   "use strict";
@@ -2607,6 +2627,7 @@
     refreshHeader();
   }
   function logoutLocal(expired){
+    try{if(KSB)KSB.auth.signOut({scope:"local"});}catch(e){}
     SESS=null;saveSess();try{localStorage.removeItem("fc_data");}catch(e){}try{if(APP&&APP.clearSession)APP.clearSession();}catch(e){}
     expenses=[];docs=[];employees=[];notices=[];roster=[];me=null;library=[];
     applyRoleUI();setView("login");showHub();
@@ -2614,6 +2635,59 @@
     try{if(haveUrl())fetch(cfg.url.trim()+"?api=auth").then(function(r){return r.json();}).then(function(j){adminSet=j.adminSet!==false;testMode=!!j.testMode;$("lgTest").classList.toggle("hide",!testMode);}).catch(function(){});}catch(e){}
   }
   var lgMode="";
+  // ---------- (11/9) 카카오 로그인 (Supabase Auth) ----------
+  var KSB=null;try{KSB=window.supabase.createClient("https://aeiguleovssftmaekoil.supabase.co","sb_publishable_xhxwt7-GfRDTRRTYVDUfjQ_6LmPC51n",{auth:{persistSession:true,detectSessionInUrl:true}});}catch(e){KSB=null;}
+  var KK_SESS=null;
+  function kkErr(m,id){var el=$(id||"kkErr");el.textContent=m;el.classList.remove("hide");}
+  async function kkPost(payload){var res=await fetch(cfg.url.trim(),{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload)});return await res.json();}
+  async function kkAfter(r){
+    SESS={tk:r.tk,role:r.role,name:r.name,site:r.site||""};saveSess();
+    try{if(APP&&APP.setSession)APP.setSession(r.tk);}catch(e){}
+    try{if(KSB)await KSB.auth.signOut({scope:"local"});}catch(e){}
+    KK_SESS=null;
+    try{await cloudPull();}catch(e){}
+    applyRoleUI();renderSiteInfo();renderDocCard();
+    setView(isStaff()?"home":(isMgr()?"notice":"emp"));
+    toast((r.name||"")+"님 환영합니다"+(r.linked?" · 카카오 계정이 연결되었습니다":""));
+  }
+  async function kkFinish(sess){
+    var w=0;while(!window.__booted&&w<100){await new Promise(function(r){setTimeout(r,100);});w++;}
+    if(SESS&&SESS.tk)return;
+    if(!haveUrl()){kkErr("서버 주소가 없습니다.");return;}
+    var b=$("kakaoBtn");b.disabled=true;b.textContent="확인 중…";
+    try{
+      var r=await kkPost({action:"login",mode:"kakao",sbtk:sess.access_token});
+      if(r.ok){await kkAfter(r);return;}
+      if(r.link){KK_SESS=sess;$("lkNick").textContent=r.nick||r.name||"카카오";$("lkErr").classList.add("hide");$("lkName").value=r.name||"";$("lkPw").value="";$("lgPick").classList.add("hide");$("lgForm").classList.add("hide");$("lgLink").classList.remove("hide");setTimeout(function(){try{$(r.name?"lkPw":"lkName").focus();}catch(e){}},60);return;}
+      kkErr(r.error||"카카오 로그인에 실패했습니다.");try{if(KSB)await KSB.auth.signOut({scope:"local"});}catch(e){}
+    }catch(e){kkErr("연결에 실패했습니다: "+((e&&e.message)||e));}
+    finally{b.disabled=false;b.innerHTML=b.getAttribute("data-html");}
+  }
+  (function(){
+    var b=$("kakaoBtn");b.setAttribute("data-html",b.innerHTML);
+    b.addEventListener("click",function(){
+      if(!KSB){kkErr("로그인 모듈을 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.");return;}
+      $("kkErr").classList.add("hide");b.disabled=true;
+      KSB.auth.signInWithOAuth({provider:"kakao",options:{redirectTo:location.origin+location.pathname}}).then(function(r){if(r&&r.error){b.disabled=false;kkErr("카카오 로그인을 시작하지 못했습니다: "+r.error.message);}});
+    });
+    $("lkBack").addEventListener("click",async function(){try{if(KSB)await KSB.auth.signOut({scope:"local"});}catch(e){}KK_SESS=null;$("lgLink").classList.add("hide");$("lgPick").classList.remove("hide");});
+    async function doLink(){
+      var nm=$("lkName").value.trim(),pw=$("lkPw").value.replace(/[^0-9]/g,"");
+      if(!nm){kkErr("이름을 입력해 주세요.","lkErr");return;}if(pw.length!==4){kkErr("휴대폰 번호 뒷자리 4자리를 입력해 주세요.","lkErr");return;}
+      if(!KK_SESS){kkErr("카카오 로그인이 풀렸습니다. 처음부터 다시 해 주세요.","lkErr");return;}
+      var g=$("lkGo");g.disabled=true;g.textContent="확인 중…";
+      try{var r=await kkPost({action:"linkKakao",sbtk:KK_SESS.access_token,name:nm,pw:pw});
+        if(r.ok){$("lgLink").classList.add("hide");$("lgPick").classList.remove("hide");await kkAfter(r);}
+        else kkErr(r.error||"연결에 실패했습니다.","lkErr");
+      }catch(e){kkErr("연결에 실패했습니다: "+((e&&e.message)||e),"lkErr");}
+      g.disabled=false;g.textContent="연결하고 들어가기";
+    }
+    $("lkGo").addEventListener("click",doLink);["lkName","lkPw"].forEach(function(id){$(id).addEventListener("keydown",function(e){if(e.key==="Enter")doLink();});});
+    if(KSB){
+      if(/error=|error_description=/.test(location.hash)){try{var q=new URLSearchParams(location.hash.slice(1));kkErr("카카오 로그인이 취소되었거나 실패했습니다. "+(q.get("error_description")||""));}catch(e){}try{history.replaceState(null,"",location.pathname+location.search);}catch(e){}}
+      KSB.auth.onAuthStateChange(function(ev,sess){if(sess&&(ev==="SIGNED_IN"||ev==="INITIAL_SESSION")&&!(SESS&&SESS.tk))kkFinish(sess);});
+    }
+  })();
   function lgErr(m){var el=$("lgErr");el.textContent=m;el.classList.remove("hide");}
   function openLogin(m){
     lgMode=m;$("lgPick").classList.add("hide");$("lgForm").classList.remove("hide");$("lgErr").classList.add("hide");
@@ -3254,6 +3328,7 @@
     }
     applyRoleUI();renderSiteInfo();renderDocCard();
     try{$("lgTest").classList.toggle("hide",!testMode);}catch(e){}
+    window.__booted=true;
     setView(isStaff()?"home":(role()?(isMgr()?"capture":"emp"):"login"));try{if(BOOT&&BOOT.menu==="pro"){setView("login");var hp=document.getElementById("hubPro");if(hp)hp.click();}}catch(e){}
     if(BOOT&&BOOT.embed&&BOOT.v&&role()){try{setView(BOOT.v);}catch(e){}}
     if(APP){try{APP.ready();}catch(e){}}
