@@ -3,7 +3,7 @@
    · news/posts.json 의 글 목록으로 아래 파일들을 만들어냅니다.
        news/<파일명>.html   기사 페이지 (news/_template.html 의 겉모양 사용)
        news.html            소식 게시판 표 · 전체 건수 · 구조화 데이터
-       index.html           홈 '최근 소식' 3건
+       index.html           홈 '최근 소식' 6건
        sitemap.xml          기사 주소 목록
    · 관리자 페이지(/admin/)와 테스트용 Node 스크립트가 함께 씁니다.
    ═══════════════════════════════════════════════════════════ */
@@ -13,7 +13,7 @@
   var SITE = 'https://kmpfa.or.kr';
   var ORG = '한국반려동물이동장례협회';
   var CATEGORIES = ['공지', '기획', '보도'];
-  var RECENT_COUNT = 3;
+  var RECENT_COUNT = 6;
   var GENERATED_NOTE = '<!-- 이 파일은 소식 관리(/admin/)에서 자동으로 만들어집니다. 직접 고치면 다음 게시 때 덮어써집니다. -->';
 
   /* ── 공통 도구 ───────────────────────────────────────── */
