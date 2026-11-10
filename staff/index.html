@@ -434,6 +434,12 @@
   .lib-a:active{color:#7A6247;}
   .lib-b{font-size:10px;font-weight:700;color:#7A6247;background:#F5F2EB;border:1px solid #E2DCD0;border-radius:6px;padding:1px 6px;white-space:nowrap;}
   .lib-d{font-size:11px;color:#9A9288;white-space:nowrap;}
+  .lib-f{display:inline-block;font-size:10.5px;font-weight:800;color:#2A2724;background:#fff;border:1px solid #D8D5C8;border-radius:6px;padding:2px 7px;cursor:pointer;white-space:nowrap;letter-spacing:.02em;}
+  .lib-f:active{background:#F5F2EB;}
+  .lib-files{display:flex;gap:4px;flex-wrap:wrap;flex:none;}
+  .le-file{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px dashed #EEE7DC;font-size:13px;}
+  .le-file.rm{opacity:.45;text-decoration:line-through;}
+  .le-file span{flex:1;min-width:0;overflow-wrap:anywhere;}
   .lib-row .fbtn{padding:2px 7px;font-size:11px;}
   .fbtn{border:1px solid #D8D5C8;background:#F4F3EE;border-radius:8px;padding:6px 10px;font-size:11.5px;font-weight:700;color:#1C2A27;cursor:pointer;font-family:inherit;text-decoration:none;white-space:nowrap;}
   .fbtn.up{background:#2A2724;color:#fff;border-color:#2A2724;}
@@ -1610,6 +1616,9 @@
   // ==================== (11/5) 공용 자료실 ====================
   var LIB_CATS=["협회 기본 서류","회의 기록","가입·회원 서식","재정","대외 활동·정책","교육·민간자격","사업 계획"];
   function libOpen(u){if(!u)return;if(APP&&APP.openUrl)APP.openUrl(u);else window.open(u,"_blank");}
+  // (11/10) 자료 한 건에 파일 여러 개. 옛 자료(파일 한 벌)도 같은 모양으로 읽음
+  function libFiles(x){if(x&&Array.isArray(x.files)&&x.files.length)return x.files;return x&&x.url?[{id:x.fileId||"",name:x.name||"",url:x.url,type:x.type||""}]:[];}
+  function libExt(f){var m=/\.([A-Za-z0-9]{1,6})$/.exec(String(f.name||""));return m?m[1].toUpperCase():"파일";}
   function libRefresh(){try{renderLibrary($("libCard"));}catch(e){}try{var hl=$("hmLib");if(hl){renderLibrary(hl);hl.style.display=(library||[]).length?"":"none";}}catch(e){}}
   function renderLibrary(el){
     if(!el)return;var adm=isAdmin();
@@ -1617,7 +1626,9 @@
     var cats=LIB_CATS.concat(Object.keys(by).filter(function(c){return LIB_CATS.indexOf(c)<0;}));
     var body=cats.filter(function(c){return by[c]&&by[c].length;}).map(function(c){
       return '<div class="lib-cat">'+esc(c)+' <span>'+by[c].length+'</span></div>'+by[c].map(function(x){
-        return '<div class="lib-row"><a class="lib-a" data-lurl="'+esc(x.url||"")+'">'+esc(x.title||x.name||"자료")+'</a>'
+        var fs=libFiles(x);
+        return '<div class="lib-row"><a class="lib-a" data-lurl="'+esc((fs[0]||{}).url||"")+'">'+esc(x.title||x.name||"자료")+'</a>'
+          +(fs.length>1?'<span class="lib-files">'+fs.map(function(f){return '<span class="lib-f" data-lurl="'+esc(f.url||"")+'" title="'+esc(f.name||"")+'">'+esc(libExt(f))+'</span>';}).join("")+'</span>':(fs[0]?'<span class="lib-f" data-lurl="'+esc(fs[0].url||"")+'" title="'+esc(fs[0].name||"")+'">'+esc(libExt(fs[0]))+'</span>':''))
           +(x.scope==="officer"?'<span class="lib-b">임원만</span>':(x.scope==="special"?'<span class="lib-b">특별회원 이상</span>':''))
           +'<span class="lib-d">'+esc(x.at?fmtK(x.at):"")+'</span>'
           +(adm?'<button class="fbtn" data-ledit="'+esc(x.id)+'">수정</button><button class="fbtn warn" data-ldel="'+esc(x.id)+'">삭제</button>':'')
@@ -1643,9 +1654,11 @@
       +'<div class="field"><label>제목 <small style="color:#868C94;font-weight:400">(비워 두면 파일 이름)</small></label><input type="text" id="lbTitle" placeholder="예: 회칙 (2026. 11. 5. 개정)"></div>'
       +'<div class="field"><label>공개 범위</label><select id="lbScope">'+libScopeOpts("all")+'</select></div>'
       +'<div class="field"><label>파일 <small style="color:#868C94;font-weight:400">(여러 개 가능, 한 파일 10MB 이하)</small></label><input type="file" id="lbFile" multiple></div>'
+      +'<label id="lbGroupWrap" class="hide" style="display:flex;align-items:center;gap:8px;font-size:13px;color:#2A2724;margin:-4px 0 12px"><input type="checkbox" id="lbGroup" checked> 고른 파일을 <b>자료 한 건으로 묶기</b> <small style="color:#868C94">(예: 같은 문서의 DOCX + PDF. 끄면 파일마다 자료 한 건씩)</small></label>'
       +'<div class="err hide" id="lbErr"></div>'
       +'<div class="btns" style="margin-top:12px"><button class="btn ghost" id="lbCancel">취소</button><button class="btn primary" id="lbSave">올리기</button></div>');
     $("lbCancel").addEventListener("click",closeSheet);
+    $("lbFile").addEventListener("change",function(){var n=($("lbFile").files||[]).length;$("lbGroupWrap").classList.toggle("hide",n<2);});
     $("lbSave").addEventListener("click",async function(){
       var btn=this,er=$("lbErr");er.classList.add("hide");
       var fs=Array.prototype.slice.call($("lbFile").files||[]);
@@ -1654,7 +1667,7 @@
       btn.disabled=true;btn.textContent="올리는 중…";
       try{
         var atts=[];for(var i=0;i<fs.length;i++){var a=await readFile(fs[i]);if(a)atts.push({name:fs[i].name||a.name,type:fs[i].type||"application/octet-stream",dataB64:String(a.dataUrl).split(",")[1]});}
-        var r=await cloudPost({action:"libAdd",cat:$("lbCat").value,title:$("lbTitle").value.trim(),scope:$("lbScope").value,attachments:atts});
+        var r=await cloudPost({action:"libAdd",cat:$("lbCat").value,title:$("lbTitle").value.trim(),scope:$("lbScope").value,attachments:atts,group:fs.length>1&&$("lbGroup").checked});
         library=r.library||[];closeSheet();libRefresh();toast("자료를 올렸습니다");
       }catch(e){er.textContent="실패: "+e.message;er.classList.remove("hide");btn.disabled=false;btn.textContent="올리기";}
     });
@@ -1665,19 +1678,25 @@
       +'<div class="field"><label>제목</label><input type="text" id="leTitle" value="'+esc(x.title||"")+'"></div>'
       +'<div class="field"><label>분류</label><select id="leCat">'+libCatOpts(x.cat)+'</select></div>'
       +'<div class="field"><label>공개 범위</label><select id="leScope">'+libScopeOpts(x.scope)+'</select></div>'
-      +'<div class="field"><label>파일 교체 <small style="color:#868C94;font-weight:400">(선택 · 10MB 이하)</small></label><input type="file" id="leFile"><div style="font-size:12.5px;color:#868C94;margin-top:6px;line-height:1.5">지금 파일: '+esc(x.name||"-")+'<br>새 파일을 고르면 옛 파일은 지워지고 제목·분류·범위는 그대로 유지됩니다.</div></div>'
+      +'<div class="field"><label>파일 <small style="color:#868C94;font-weight:400">(자료 한 건에 10개까지)</small></label><div id="leFiles">'+libFiles(x).map(function(f){return '<div class="le-file" data-fid="'+esc(f.id||"")+'"><span class="lib-f">'+esc(libExt(f))+'</span><span>'+esc(f.name||"")+'</span><button type="button" class="fbtn warn" data-lerm="'+esc(f.id||"")+'">지우기</button></div>';}).join("")+'</div>'
+      +'<div style="margin-top:8px"><label for="leFile" style="font-size:12.5px;color:#5C544A">파일 추가 <small style="color:#868C94">(여러 개 가능 · 한 파일 10MB 이하 · 예: 같은 문서의 PDF)</small></label><input type="file" id="leFile" multiple></div></div>'
       +'<div class="err hide" id="leErr"></div>'
       +'<div class="btns" style="margin-top:12px"><button class="btn ghost" id="leCancel">취소</button><button class="btn primary" id="leSave">저장</button></div>');
     $("leCancel").addEventListener("click",closeSheet);
+    var rmSet={};
+    $("leFiles").querySelectorAll("[data-lerm]").forEach(function(b){b.addEventListener("click",function(){var fid=b.getAttribute("data-lerm");var row=b.closest(".le-file");rmSet[fid]=!rmSet[fid];row.classList.toggle("rm",!!rmSet[fid]);b.textContent=rmSet[fid]?"되돌리기":"지우기";});});
     $("leSave").addEventListener("click",async function(){
       var btn=this,er=$("leErr");er.classList.add("hide");
-      var f=($("leFile").files||[])[0]||null;
-      if(f&&f.size>10*1024*1024){er.textContent="10MB가 넘는 파일입니다.";er.classList.remove("hide");return;}
-      btn.disabled=true;btn.textContent=f?"파일 바꾸는 중…":"저장 중…";
+      var fs=Array.prototype.slice.call($("leFile").files||[]);
+      if(fs.some(function(f){return f.size>10*1024*1024;})){er.textContent="10MB가 넘는 파일이 있습니다.";er.classList.remove("hide");return;}
+      var rm=Object.keys(rmSet).filter(function(k){return rmSet[k];});
+      if(rm.length>=libFiles(x).length&&!fs.length){er.textContent="파일이 하나도 남지 않습니다. 자료를 지우려면 삭제를 쓰세요.";er.classList.remove("hide");return;}
+      btn.disabled=true;btn.textContent=(fs.length||rm.length)?"파일 정리 중…":"저장 중…";
       try{
         var p={action:"libUpdate",id:id,title:$("leTitle").value,cat:$("leCat").value,scope:$("leScope").value};
-        if(f){var a=await readFile(f);if(!a)throw new Error("파일을 읽지 못했습니다.");p.attachments=[{name:f.name||a.name,type:f.type||"application/octet-stream",dataB64:String(a.dataUrl).split(",")[1]}];}
-        var r=await cloudPost(p);library=r.library||[];closeSheet();libRefresh();toast(f?"파일을 바꿨습니다":"수정했습니다");
+        if(rm.length)p.removeFiles=rm;
+        if(fs.length){var atts=[];for(var i=0;i<fs.length;i++){var a=await readFile(fs[i]);if(!a)throw new Error("파일을 읽지 못했습니다.");atts.push({name:fs[i].name||a.name,type:fs[i].type||"application/octet-stream",dataB64:String(a.dataUrl).split(",")[1]});}p.attachments=atts;}
+        var r=await cloudPost(p);if(r&&r.ok===false)throw new Error(r.error||"실패");library=r.library||[];closeSheet();libRefresh();toast((fs.length||rm.length)?"파일을 정리했습니다":"수정했습니다");
       }catch(e){er.textContent="실패: "+e.message;er.classList.remove("hide");btn.disabled=false;btn.textContent="저장";}
     });
   }
