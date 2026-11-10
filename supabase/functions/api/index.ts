@@ -801,7 +801,18 @@ const LIB_CATS = [
 ];
 async function libAll(c) {
   const v = await c.getJson("LIBRARY", []);
-  return Array.isArray(v) ? v : [];
+  const list = Array.isArray(v) ? v : [];
+  // (11/10) 자료 한 건에 파일 여러 개: files 배열. 옛 자료(name/url/fileId 한 벌)는 읽을 때 files 한 칸으로 맞춤.
+  for (const x of list) {
+    if (!Array.isArray(x.files)) x.files = x.url ? [ { id: x.fileId || "", name: x.name || "", url: x.url, type: x.type || "" } ] : [];
+    libSyncLegacy(x);
+  }
+  return list;
+}
+// files[0]을 옛 필드(name/url/fileId/type)에도 복사해 옛 화면과 호환
+function libSyncLegacy(x) {
+  const f = (x.files || [])[0];
+  x.name = f ? f.name : ""; x.url = f ? f.url : ""; x.fileId = f ? f.id : ""; x.type = f ? f.type : "";
 }
 async function libFor(c, who) {
   // (11/9) 공개 범위 3단계: all(전체) / special(특별회원 이상) / officer(임원만)
@@ -2605,20 +2616,25 @@ async function handlePost(c, body) {
     };
     const saved = await saveAtts(c, "자료실/" + cat, atts);
     const list = await libAll(c);
-    saved.forEach((f, i)=>{
-      const t = String(body.title || "").trim();
-      list.push({
-        id: "L" + Date.now().toString(36) + rid(4),
-        cat,
-        title: t ? saved.length > 1 ? t + " (" + (i + 1) + ")" : t : String(f.name).replace(/\.[^.]+$/, ""),
-        name: f.name,
-        url: f.url,
-        fileId: f.id,
-        type: f.type,
-        scope,
-        at: today()
+    const toFile = (f)=>({ id: f.id, name: f.name, url: f.url, type: f.type });
+    const t = String(body.title || "").trim();
+    if (body.group && saved.length > 1) {
+      // (11/10) 여러 파일을 자료 한 건으로 묶기 (예: 같은 문서의 docx + pdf)
+      const x = { id: "L" + Date.now().toString(36) + rid(4), cat, title: t || String(saved[0].name).replace(/\.[^.]+$/, ""), files: saved.map(toFile), scope, at: today() };
+      libSyncLegacy(x); list.push(x);
+    } else {
+      saved.forEach((f, i)=>{
+        const x = {
+          id: "L" + Date.now().toString(36) + rid(4),
+          cat,
+          title: t ? saved.length > 1 ? t + " (" + (i + 1) + ")" : t : String(f.name).replace(/\.[^.]+$/, ""),
+          files: [ toFile(f) ],
+          scope,
+          at: today()
+        };
+        libSyncLegacy(x); list.push(x);
       });
-    });
+    }
     await c.set("LIBRARY", JSON.stringify(list));
     return {
       ok: true,
@@ -2635,17 +2651,26 @@ async function handlePost(c, body) {
     if (body.title !== undefined && String(body.title).trim()) x.title = String(body.title).trim();
     if (body.cat !== undefined && LIB_CATS.indexOf(String(body.cat)) >= 0) x.cat = String(body.cat);
     if (body.scope !== undefined) x.scope = /^(officer|special)$/.test(String(body.scope)) ? String(body.scope) : "all";
-    // (11/10) 파일 교체: attachments[0]이 있으면 새 파일을 저장하고 옛 파일은 지움. 제목·분류·범위는 그대로.
-    const ratt = (body.attachments || []).filter((z)=>z && z.dataB64)[0];
-    if (ratt) {
-      if (String(ratt.dataB64).length > 14000000) return { ok: false, error: "파일이 너무 큽니다. 10MB 이하로 올려 주세요." };
-      const saved = await saveAtts(c, "자료실/" + x.cat, [ ratt ]);
-      if (saved.length) {
-        if (x.fileId) await removeFile(x.fileId);
-        const f = saved[0];
-        x.name = f.name; x.url = f.url; x.fileId = f.id; x.type = f.type; x.at = today();
-      }
+    // (11/10) 파일 묶음 편집: removeFiles(파일 id 목록)는 지우고, attachments는 뒤에 덧붙임. 제목·분류·범위는 그대로.
+    const rm = (Array.isArray(body.removeFiles) ? body.removeFiles : []).map((z)=>String(z || ""));
+    let changed = false;
+    if (rm.length) {
+      const keep = [], drop = [];
+      for (const f of x.files || []) (rm.indexOf(String(f.id || "")) >= 0 ? drop : keep).push(f);
+      for (const f of drop) if (f.id) await removeFile(f.id);
+      x.files = keep; changed = changed || drop.length > 0;
     }
+    const adds = (body.attachments || []).filter((z)=>z && z.dataB64);
+    if (adds.length) {
+      if (adds.some((z)=>String(z.dataB64).length > 14000000)) return { ok: false, error: "파일이 너무 큽니다. 10MB 이하로 올려 주세요." };
+      if ((x.files || []).length + adds.length > 10) return { ok: false, error: "자료 한 건에는 파일을 10개까지 넣을 수 있습니다." };
+      const saved = await saveAtts(c, "자료실/" + x.cat, adds);
+      x.files = (x.files || []).concat(saved.map((f)=>({ id: f.id, name: f.name, url: f.url, type: f.type })));
+      changed = changed || saved.length > 0;
+    }
+    if (!(x.files || []).length) return { ok: false, error: "파일이 하나도 남지 않습니다. 자료를 지우려면 삭제를 쓰세요." };
+    if (changed) x.at = today();
+    libSyncLegacy(x);
     await c.set("LIBRARY", JSON.stringify(list));
     return {
       ok: true,
@@ -2659,7 +2684,7 @@ async function handlePost(c, body) {
       ok: false,
       error: "자료를 찾을 수 없습니다."
     };
-    if (x.fileId) await removeFile(x.fileId);
+    for (const f of x.files || []) if (f.id) await removeFile(f.id);
     await c.set("LIBRARY", JSON.stringify(list.filter((r)=>String(r.id) !== String(body.id))));
     return {
       ok: true,
