@@ -2635,6 +2635,17 @@ async function handlePost(c, body) {
     if (body.title !== undefined && String(body.title).trim()) x.title = String(body.title).trim();
     if (body.cat !== undefined && LIB_CATS.indexOf(String(body.cat)) >= 0) x.cat = String(body.cat);
     if (body.scope !== undefined) x.scope = /^(officer|special)$/.test(String(body.scope)) ? String(body.scope) : "all";
+    // (11/10) 파일 교체: attachments[0]이 있으면 새 파일을 저장하고 옛 파일은 지움. 제목·분류·범위는 그대로.
+    const ratt = (body.attachments || []).filter((z)=>z && z.dataB64)[0];
+    if (ratt) {
+      if (String(ratt.dataB64).length > 14000000) return { ok: false, error: "파일이 너무 큽니다. 10MB 이하로 올려 주세요." };
+      const saved = await saveAtts(c, "자료실/" + x.cat, [ ratt ]);
+      if (saved.length) {
+        if (x.fileId) await removeFile(x.fileId);
+        const f = saved[0];
+        x.name = f.name; x.url = f.url; x.fileId = f.id; x.type = f.type; x.at = today();
+      }
+    }
     await c.set("LIBRARY", JSON.stringify(list));
     return {
       ok: true,
