@@ -1665,11 +1665,20 @@
       +'<div class="field"><label>제목</label><input type="text" id="leTitle" value="'+esc(x.title||"")+'"></div>'
       +'<div class="field"><label>분류</label><select id="leCat">'+libCatOpts(x.cat)+'</select></div>'
       +'<div class="field"><label>공개 범위</label><select id="leScope">'+libScopeOpts(x.scope)+'</select></div>'
+      +'<div class="field"><label>파일 교체 <small style="color:#868C94;font-weight:400">(선택 · 10MB 이하)</small></label><input type="file" id="leFile"><div style="font-size:12.5px;color:#868C94;margin-top:6px;line-height:1.5">지금 파일: '+esc(x.name||"-")+'<br>새 파일을 고르면 옛 파일은 지워지고 제목·분류·범위는 그대로 유지됩니다.</div></div>'
+      +'<div class="err hide" id="leErr"></div>'
       +'<div class="btns" style="margin-top:12px"><button class="btn ghost" id="leCancel">취소</button><button class="btn primary" id="leSave">저장</button></div>');
     $("leCancel").addEventListener("click",closeSheet);
     $("leSave").addEventListener("click",async function(){
-      try{var r=await cloudPost({action:"libUpdate",id:id,title:$("leTitle").value,cat:$("leCat").value,scope:$("leScope").value});library=r.library||[];closeSheet();libRefresh();toast("수정했습니다");}
-      catch(e){toast("실패: "+e.message);}
+      var btn=this,er=$("leErr");er.classList.add("hide");
+      var f=($("leFile").files||[])[0]||null;
+      if(f&&f.size>10*1024*1024){er.textContent="10MB가 넘는 파일입니다.";er.classList.remove("hide");return;}
+      btn.disabled=true;btn.textContent=f?"파일 바꾸는 중…":"저장 중…";
+      try{
+        var p={action:"libUpdate",id:id,title:$("leTitle").value,cat:$("leCat").value,scope:$("leScope").value};
+        if(f){var a=await readFile(f);if(!a)throw new Error("파일을 읽지 못했습니다.");p.attachments=[{name:f.name||a.name,type:f.type||"application/octet-stream",dataB64:String(a.dataUrl).split(",")[1]}];}
+        var r=await cloudPost(p);library=r.library||[];closeSheet();libRefresh();toast(f?"파일을 바꿨습니다":"수정했습니다");
+      }catch(e){er.textContent="실패: "+e.message;er.classList.remove("hide");btn.disabled=false;btn.textContent="저장";}
     });
   }
   function renderDocs(){
