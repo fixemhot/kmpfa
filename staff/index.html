@@ -603,7 +603,7 @@
   <div id="v-list" class="wrap hide">
     <div id="noUrl2" class="banner hide">공유 서버가 연결되지 않아 내역을 불러올 수 없습니다. <a class="goSet">설정</a>에서 주소를 넣어주세요.</div>
     <div class="mfilter"><select id="listMonth"></select><span class="total" id="listTotal"></span></div>
-    <button class="mini" id="reqLinkBtn" style="margin-top:0">📤 결재 요청 링크 보내기</button>
+    <button class="mini" id="reqLinkBtn" style="margin-top:0">📤 결재 요청 보내기</button>
     <div id="listBody"></div>
   </div>
 
@@ -631,7 +631,7 @@
     <div id="noUrl4" class="banner hide">공유 서버가 연결되지 않아 문서를 불러올 수 없습니다. <a class="goSet">설정</a>에서 주소를 넣어주세요.</div>
     <div class="twobtn" style="margin-top:0">
       <button class="mini" id="docNewBtn" style="margin-top:0">＋ 문서 작성</button>
-      <button class="mini" id="docLinkBtn" style="margin-top:0">📤 결재 링크</button>
+      <button class="mini" id="docLinkBtn" style="margin-top:0">📤 결재 요청</button>
     </div>
     <button class="mini hide" id="supplyBtn" style="margin-top:10px">📦 다음 달 보급품 요청하기</button>
     <div id="docForm" class="card hide">
@@ -843,6 +843,7 @@
   function isStaff(){return role()==="staff";}
   var memberTotal=0,library=[],notices=[],roster=[],me=null,supplyTemplate="",mgrSites=[],adminSet=true,testMode=false;
   var payslips=[],myDocs=[],mySigs={},myPosts=[],paySummary=[],sigCache={},approvers=[],apprDocs=[];   // 서버가 첫 화면에 실어 보낸 데이터 (없으면 따로 불러옴)
+  var MGR_ROLE="",APPR_KEYS=null;   // (11/14) 임원 결재: 내 직책, 서버가 준 내 결재 키
   function loadXLSX(){return new Promise(function(res){if(window.XLSX)return res(true);var sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";sc.onload=function(){res(true);};sc.onerror=function(){res(false);};document.head.appendChild(sc);});}
   cfg.url=API;saveCfg();
   // 서버 상태(관리자 비밀번호 설정 여부·테스트 모드)는 화면을 먼저 띄운 뒤 뒤에서 확인
@@ -895,7 +896,7 @@
     if(j.role2){ROLES.role2=j.role2;cfg.role2=j.role2;}
     expenses=(j.expenses||[]).sort(function(a,b){return a.date<b.date?1:-1;});
     docs=(j.docs||[]).sort(function(a,b){return String(a.date)<String(b.date)?1:-1;});
-    employees=(j.employees||[]);MGR_ME=j.meId||"";REF_STATS=j.refStats||[];
+    employees=(j.employees||[]);MGR_ME=j.meId||"";MGR_ROLE=j.meRole||"";APPR_KEYS=j.apprKeys||null;REF_STATS=j.refStats||[];
     if(j.empForms&&j.empForms.files)empForms.files=j.empForms.files;
     if(j.pest)pestFill(j.pest);
     apkInfo=j.apk||null;apkStatus();
@@ -1124,7 +1125,7 @@
         '<div class="meta">'+meta+'</div><div style="margin-top:5px">'+paper+'</div></div>'+
         ((isAdmin()||!(r1||r2))?'<div style="display:flex;flex-direction:column;gap:4px"><button class="del" data-edit="'+esc(x.id)+'" style="color:#2C6E9B">수정</button><button class="del" data-del="'+esc(x.id)+'">삭제</button></div>':'')+'</div>'+
         '<div class="foot"><span>'+badge+'</span><span style="font-size:12px">'+c1+' · '+c2+'</span></div>'+
-        (isAdmin()?'<div style="display:flex;gap:8px;margin-top:8px">'+b1+b2+'</div>':'')+'</div>';
+        (isAdmin()?'<div style="display:flex;gap:8px;margin-top:8px">'+b1+b2+'</div>':offApprHtml(x))+'</div>';
     }).join("");
     body.querySelectorAll("[data-att]").forEach(function(el){el.addEventListener("click",function(ev){ev.stopPropagation();var x=expenses.filter(function(e){return String(e.id)===el.getAttribute("data-att");})[0];if(x&&x.attachments&&x.attachments.length)openAttach(x.attachments[0]);});});
     body.querySelectorAll("[data-prev]").forEach(function(el){el.addEventListener("click",function(ev){if(ev.target.closest("[data-att]"))return;openExpPreview(el.getAttribute("data-prev"));});});
@@ -1132,6 +1133,7 @@
     body.querySelectorAll("[data-unr]").forEach(function(b){b.addEventListener("click",function(){unapproveRole(b.getAttribute("data-id"),b.getAttribute("data-unr"));});});
     body.querySelectorAll("[data-del]").forEach(function(b){b.addEventListener("click",function(){delExpense(b.getAttribute("data-del"));});});
     body.querySelectorAll("[data-edit]").forEach(function(b){b.addEventListener("click",function(){editExpense(b.getAttribute("data-edit"));});});
+    body.querySelectorAll("[data-oa]").forEach(function(b){b.addEventListener("click",function(){officerApprove(b.getAttribute("data-id"),b.getAttribute("data-oa"),b.getAttribute("data-undo")==="1");});});
     var doneN=inM.filter(function(x){return x.role1By&&x.role2By;}).length;
     var progN=inM.filter(function(x){return (x.role1By||x.role2By)&&!(x.role1By&&x.role2By);}).length;
     var waitN=inM.length-doneN-progN;
@@ -1142,6 +1144,29 @@
   $("listMonth").addEventListener("change",function(){month=this.value;renderList();});
   $("reqLinkBtn").addEventListener("click",openApprovalLinks);
 
+  /* (11/14) 임원·감사가 회원앱에서 바로 지출 결재: 1차는 감사가 아닌 임원 누구나, 2차는 감사. 작성자 본인은 제외 */
+  function isAuditor(){return /감사/.test(MGR_ROLE||"");}
+  function isExpMine(x){return x.createdEmp?String(x.createdEmp)===String(MGR_ME):String(x.createdBy||"")===String((SESS&&SESS.name)||cfg.name||"");}
+  function offApprHtml(x){
+    if(!isMgr()||!MGR_ME)return "";
+    var k=isAuditor()?"2":"1",by=k==="2"?x.role2By:x.role1By,rn=k==="2"?ROLES.role2:ROLES.role1,myName=(SESS&&SESS.name)||cfg.name||"";
+    if(isExpMine(x))return '<div style="margin-top:8px;font-size:12px;color:#847C71">본인이 작성한 지출은 다른 임원과 감사가 결재합니다.</div>';
+    var btn;
+    if(!by)btn='<button class="apbtn" data-oa="'+k+'" data-id="'+esc(x.id)+'">'+esc(rn)+' 승인</button>';
+    else if(String(by)===String(myName))btn='<button class="apbtn done" data-oa="'+k+'" data-undo="1" data-id="'+esc(x.id)+'">내 승인 취소</button>';
+    else return "";
+    return '<div style="display:flex;gap:8px;margin-top:8px">'+btn+'</div>';
+  }
+  async function officerApprove(id,role,undo){
+    var rn=role==="2"?ROLES.role2:ROLES.role1;
+    if(!confirm(undo?(rn+" 승인을 취소할까요?"):(rn+" 승인할까요? 내 서명이 결재란에 들어갑니다.")))return;
+    try{var ar=await cloudPost({action:"officerApprove",id:id,role:role,undo:undo?1:0});
+      var r=expenses.filter(function(e){return String(e.id)===String(id);})[0];
+      if(r){if(role==="2"){r.role2By=ar.by||"";r.role2At=ar.at||"";r.sig2=ar.sig||"";}else{r.role1By=ar.by||"";r.role1At=ar.at||"";r.sig1=ar.sig||"";}r.status=ar.status||statusOf(r);}
+      if(!undo&&!ar.sig)toast("공지 › 내 서명을 등록하면 결재란에 서명이 들어갑니다");
+      renderList();toast(undo?"취소되었습니다":(rn+" 승인 완료"));}
+    catch(e){toast("실패: "+e.message);}
+  }
   async function approveRole(id,role){
     var rname=role==="2"?ROLES.role2:ROLES.role1;
     var name=prompt(rname+" 결재자 이름을 입력하세요",cfg.name||rname);
@@ -1171,24 +1196,17 @@
     else{copyText(msg);}
   }
   async function openApprovalLinks(){
-    if(!haveUrl()){toast("서버 연결이 필요합니다");setView("settings");return;}
-    if(isAll()){toast("지부를 먼저 선택하세요");openBuildingSheet();return;}
-    toast("링크 생성 중…");
-    try{
-      var l1=await cloudPost({action:"approveLink",role:1,site:curBuilding()});
-      var l2=await cloudPost({action:"approveLink",role:2,site:curBuilding()});
-      var mk=function(l){return SITE+"approve.html?role="+l.role+"&site="+encodeURIComponent(l.site)+"&t="+encodeURIComponent(l.t);};var links=[{name:l1.roleName,url:mk(l1)},{name:l2.roleName,url:mk(l2)}];
-      var blocks=links.map(function(l,i){
-        return '<div style="border:1px solid #E4E1D6;border-radius:12px;padding:12px;margin-bottom:10px">'+
-          '<div style="font-size:13px;font-weight:700;margin-bottom:6px">'+esc(l.name)+' 결재 링크</div>'+
-          '<div style="font-size:11px;color:#8A8A80;word-break:break-all;margin-bottom:8px">'+esc(l.url)+'</div>'+
-          '<div style="display:flex;gap:8px"><button class="mini" style="margin:0" data-copy="'+i+'">복사</button><button class="mini" style="margin:0" data-share="'+i+'">카톡·공유</button></div></div>';
-      }).join("");
-      openSheet('<h3>결재 요청 링크</h3><div style="font-size:12px;color:#8A8A80;margin-bottom:12px">'+esc(curBuilding())+' · 각 결재자에게 아래 링크를 보내세요. 링크는 계속 유효하며, 누르면 그 지부의 결재 대기 항목이 표시됩니다.</div>'+blocks+'<button class="btn ghost" id="lkClose" style="width:100%;margin-top:4px">닫기</button>');
-      document.querySelectorAll("[data-copy]").forEach(function(b){b.addEventListener("click",function(){copyText(links[+b.getAttribute("data-copy")].url);});});
-      document.querySelectorAll("[data-share]").forEach(function(b){b.addEventListener("click",function(){var l=links[+b.getAttribute("data-share")];shareLink(l.name,l.url);});});
-      $("lkClose").addEventListener("click",closeSheet);
-    }catch(e){toast("실패: "+e.message);}
+    /* (11/18) 결재는 임원·감사가 회원앱에서 직접 합니다. 예전 approve.html 링크(없는 페이지)는 쓰지 않고, 회원앱 주소를 보냅니다 */
+    var url=SITE,b=curBuilding()==="__ALL__"?site():curBuilding();
+    var msg="📋 ["+(b||"협회")+"] 결재 요청\n이사·감사님, 회원앱에 로그인하신 뒤 지출 내역(기안서)에서 승인해 주세요.\n1차: 감사가 아닌 임원 1명 · 2차: 감사\n👉 "+url;
+    openSheet('<h3>결재 요청 보내기</h3><div style="font-size:13px;color:#52575D;line-height:1.6;margin-bottom:12px">이사·감사는 <b>회원앱에 로그인</b>하면 지출 내역에서 바로 승인할 수 있습니다.<br>1차는 감사가 아닌 임원 1명(작성자 본인 제외), 2차는 감사가 승인합니다.</div>'+
+      '<div style="border:1px solid #E4E1D6;border-radius:12px;padding:12px;margin-bottom:10px"><div style="font-size:13px;font-weight:700;margin-bottom:6px">보낼 내용</div>'+
+      '<div style="font-size:12px;color:#52575D;white-space:pre-wrap;word-break:break-all;margin-bottom:8px">'+esc(msg)+'</div>'+
+      '<div style="display:flex;gap:8px"><button class="mini" style="margin:0" id="lkCopy">복사</button><button class="mini" style="margin:0" id="lkShare">카톡·공유</button></div></div>'+
+      '<button class="btn ghost" id="lkClose" style="width:100%;margin-top:4px">닫기</button>');
+    $("lkCopy").addEventListener("click",function(){copyText(msg);});
+    $("lkShare").addEventListener("click",function(){if(APP){APP.share(msg);return;}if(navigator.share){navigator.share({title:"결재 요청",text:msg}).catch(function(){});}else{copyText(msg);}});
+    $("lkClose").addEventListener("click",closeSheet);
   }
   async function delExpense(id){if(!confirm("이 지출 내역을 삭제할까요?"))return;try{await cloudPost({action:"delete",id:id});expenses=expenses.filter(function(e){return String(e.id)!==String(id);});renderList();toast("삭제되었습니다");}catch(e){toast("실패: "+e.message);}}
 
@@ -2820,13 +2838,14 @@
     var d=new Date(),ym=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"),mo=d.getMonth()+1;
     var ex=(expenses||[]).filter(function(x){return String(x.date||"").slice(0,7)===ym;});
     var exSum=ex.reduce(function(a,x){return a+(Number(x.amount)||0);},0),exWait=ex.filter(function(x){return !(x.role1By&&x.role2By);}).length;
+    var expTodo=(MGR_ME?(expenses||[]).filter(function(x){return !x[isAuditor()?"role2By":"role1By"]&&!isExpMine(x);}).length:0);
     var todo=(apprDocs||[]).filter(isMyTurn).length,unread=(notices||[]).filter(function(n){return !n.read;}).length;
     var tile=function(ic,lab,val,sub,col,go){return '<div class="ms-t"'+(go?' data-msgo="'+go+'"':'')+'><div class="ms-l">'+ic+' '+lab+'</div><div class="ms-v" style="color:'+(col||"#1C1F23")+'">'+val+'</div><div class="ms-s">'+sub+'</div></div>';};
     el.innerHTML='<style>#mgrSum .ms-g{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}@media(min-width:700px){#mgrSum .ms-g{grid-template-columns:repeat(4,1fr)}}'
       +'#mgrSum .ms-t{border:1px solid #E4E6E9;border-radius:12px;padding:10px 12px;background:#FBFBFA}#mgrSum .ms-t[data-msgo]{cursor:pointer}#mgrSum .ms-l{font-size:12.5px;color:#52575D;font-weight:700}'
       +'#mgrSum .ms-v{font-size:22px;font-weight:800;margin-top:4px}#mgrSum .ms-s{font-size:12px;color:#868C94;margin-top:2px;line-height:1.4}#mgrSum .ms-pro{margin-top:10px;border-top:1px solid #E4E6E9;padding-top:10px;font-size:13.5px;line-height:1.7}</style>'
       +'<div class="hm-h">📊 '+mo+'월 한눈에 · '+esc((SESS&&SESS.site)||"")+'</div><div class="ms-g">'
-      +tile("📥","결재할 문서",todo+"건",todo?"아래 기안서에서 결재해 주세요":"밀린 결재 없음",todo?"#D14343":"#0F766E","")
+      +tile("📥","결재할 문서",(todo+expTodo)+"건",expTodo?("지출 "+expTodo+"건 · 눌러서 내역에서 승인"+(todo?" · 기안서 "+todo+"건":"")):(todo?"아래 기안서에서 결재해 주세요":"밀린 결재 없음"),(todo+expTodo)?"#D14343":"#0F766E",expTodo?"list":"")
       +tile("📢","안 읽은 공지",unread+"건",unread?"아래 공지사항에서 확인":"모두 읽음",unread?"#B7791F":"#0F766E","")
       +tile("🧾","이번 달 지출",ex.length+"건",won(exSum)+"원"+(exWait?" · 결재 전 "+exWait+"건":""),"","list")
       +tile("👥","우리 회원",(roster||[]).length+"명","비상연락망은 아래에","","")
@@ -2955,8 +2974,8 @@
   var DRAFT_TPL="■ 목적: \n\n■ 내용\n\n\n■ 필요 예산: \n\n■ 첨부: 아래 첨부 참조";
   var PURPOSES=["물품 구매 요청","수리·보수 요청","비용 지출 요청","업무 개선·건의","근무·인력 관련","안전·교육","기타"];
   function lineOf(x){try{var v=x&&x.line;var a=typeof v==="string"?JSON.parse(v||"[]"):(v||[]);return Array.isArray(a)?a:[];}catch(e){return [];}}
-  function myKeys(){return isAdmin()?["hq:1","hq:2"]:(isMgr()?["mgr:"+((SESS&&SESS.site)||"")]:["emp:"+((me&&me.id)||"")]);}
-  function isMyTurn(x){return !!x.cur&&myKeys().indexOf(String(x.cur))>=0;}
+  function myKeys(){return isAdmin()?["hq:1","hq:2"]:(isMgr()?(APPR_KEYS&&APPR_KEYS.length?APPR_KEYS:["mgr:"+((SESS&&SESS.site)||"")]):["emp:"+((me&&me.id)||"")]);}
+  function isMyTurn(x){if(!x.cur||myKeys().indexOf(String(x.cur))<0)return false;if(isMgr()&&String(x.cur).indexOf("hq:")===0&&MGR_ME&&String(x.createdKey||"")==="emp:"+MGR_ME)return false;return true;}
   $("d_type").addEventListener("change",function(){var b=$("d_body");if($("d_type").value==="기안서"&&!b.value.trim())b.value=DRAFT_TPL;});
   function stBadge(x){
     if(lineOf(x).length){var s=String(x.status||"");if(s==="결재 완료")return '<span class="st-b st-d">결재 완료</span>';if(s==="반려")return '<span class="st-b st-w">반려</span>';
