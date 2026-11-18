@@ -111,6 +111,7 @@ const STAFF_ACTIONS = {
   lineAct: 1
 };
 const MANAGER_ACTIONS = {
+  officerApprove: 1,
   receiptRead: 1,
   add: 1,
   update: 1,
@@ -687,13 +688,19 @@ function lineOf(v) {
   }
 }
 const sigKeyForApprover = (k)=>k === "hq:1" ? "role1" : k === "hq:2" ? "role2" : k;
+// (11/14) 임원 결재: 1차(ROLE1) = 감사가 아닌 임원 전원 중 1명, 2차(ROLE2) = 감사. 작성자 본인은 제외.
+const isAuditorRole = (r)=>/감사/.test(String(r || ""));
+const hqKeyOf = (who)=>who && who.role === "manager" && who.emp ? isAuditorRole(who.emp.role) ? "hq:2" : "hq:1" : "";
+const isExpAuthor = (x, who)=>String(x.createdEmp || "") ? String(x.createdEmp) === String(who.id) : String(x.createdBy || "") === String(who.name || "");
 const myApprKeys = (who)=>who.role === "admin" ? [
     "hq:1",
     "hq:2"
   ] : who.role === "manager" ? Array.from(new Set([
     "mgr:" + who.site,
     sigKeyOf(who)
-  ])) : [
+  ].concat(hqKeyOf(who) ? [
+    hqKeyOf(who)
+  ] : []))) : [
     sigKeyOf(who)
   ];
 async function apprDocs(c, who) {
@@ -884,6 +891,8 @@ async function dataFor(c, who) {
       memberTotal: await memberTotalOf(c, who.site),
       supplyTemplate: await supplyTemplate(c, who.site),
       meId: who.emp ? who.id : "",
+      meRole: who.emp ? String(who.emp.role || "") : "",
+      apprKeys: myApprKeys(who),
       employees: who.emp ? (await c.rows("emp")).filter((x)=>String(x.referrer || "") === String(who.id) && String(x.status) !== "퇴사") : [],
       refStats: who.emp ? await refStatsOf(c) : [],
       myPosts: await mgrPosts(c, who),
@@ -954,8 +963,20 @@ async function notifyFor(c, who) {
     }));
   const myk = sigKeyOf(who);
   const myks = myApprKeys(who);
+  if (who.role === "manager" && who.emp) {
+    const k = isAuditorRole(who.emp.role) ? 2 : 1;
+    (await c.rows("exp")).forEach((x)=>{
+      if (String(x.site) !== String(who.site) || String(x.createdRole) !== "manager") return;
+      if (x["role" + k + "By"] || isExpAuthor(x, who)) return;
+      its.push({
+        id: "x:" + x.id + ":" + k,
+        title: "💳 결재할 지출이 있습니다",
+        body: String(x.title || x.items || x.vendor || "지출") + " " + (Number(x.amount) || 0).toLocaleString("ko-KR") + "원"
+      });
+    });
+  }
   (await apprDocs(c, who)).forEach((d)=>{
-    if (myks.indexOf(String(d.cur)) >= 0) its.push({
+    if (myks.indexOf(String(d.cur)) >= 0 && !(String(d.cur).indexOf("hq:") === 0 && String(d.createdKey || "") === myk)) its.push({
       id: "a:" + d.id + ":" + lineOf(d.line).length,
       title: "📝 결재할 기안서가 있습니다",
       body: String(d.title || "")
@@ -1807,6 +1828,16 @@ async function handlePost(c, body) {
       ok: false,
       error: "결재 정보가 올바르지 않습니다."
     };
+    if (W.role === "manager" && String(ent.key).indexOf("hq:") === 0) {
+      if (String(d.createdKey || "") === sigKeyOf(W)) return {
+        ok: false,
+        error: "본인이 올린 기안서는 결재할 수 없습니다."
+      };
+      if (line.some((x)=>x.st === "ok" && String(x.name || "") === String(W.name || ""))) return {
+        ok: false,
+        error: "같은 기안서를 두 번 결재할 수 없습니다."
+      };
+    }
     ent.at = today();
     ent.name = W.role === "admin" ? String(body.name || ent.pos || "") : String(W.name || "");
     let nstat;
@@ -1817,7 +1848,7 @@ async function handlePost(c, body) {
       nstat = "반려";
     } else {
       ent.st = "ok";
-      ent.sig = await c.sigIdFor(W.role === "manager" && String(ent.key).indexOf("mgr:") === 0 ? sigKeyOf(W) : sigKeyForApprover(ent.key));
+      ent.sig = await c.sigIdFor(W.role === "manager" ? sigKeyOf(W) : sigKeyForApprover(ent.key));
       ent.comment = String(body.comment || "");
       const nx = String(body.next || "");
       if (nx) {
@@ -2069,6 +2100,7 @@ async function handlePost(c, body) {
       vat: Number(rec.vat) || 0,
       bizno: rec.bizno || "",
       createdRole: isMgr ? "manager" : "admin",
+      createdEmp: isMgr && W.emp ? String(W.id) : "",
       sig0: await c.sigIdFor(sigKeyOf(W)),
       sig1: "",
       sig2: ""
@@ -2128,6 +2160,62 @@ async function handlePost(c, body) {
     return {
       ok: true,
       attachments: ulinks
+    };
+  }
+  // ============ (11/14) 임원·감사가 회원앱에서 바로 지출 결재 ============
+  if (a === "officerApprove") {
+    if (!isMgr || !W.emp) return {
+      ok: false,
+      error: "임원만 결재할 수 있습니다."
+    };
+    const h = await c.find("exp", body.id);
+    if (!h || String(h.site) !== String(W.site)) return {
+      ok: false,
+      error: "항목을 찾을 수 없습니다."
+    };
+    const role = String(body.role) === "2" ? 2 : 1;
+    const aud = isAuditorRole(W.emp.role);
+    if (role === 2 && !aud) return {
+      ok: false,
+      error: "감사 승인은 감사만 할 수 있습니다."
+    };
+    if (role === 1 && aud) return {
+      ok: false,
+      error: "감사는 감사 승인만 합니다."
+    };
+    if (isExpAuthor(h, W)) return {
+      ok: false,
+      error: "본인이 작성한 지출은 결재할 수 없습니다."
+    };
+    const o = {
+      ...h
+    };
+    const by = String(o["role" + role + "By"] || "");
+    if (body.undo) {
+      if (by !== String(W.name || "")) return {
+        ok: false,
+        error: "본인이 한 승인만 취소할 수 있습니다."
+      };
+      o["role" + role + "By"] = "";
+      o["role" + role + "At"] = "";
+      o["sig" + role] = "";
+    } else {
+      if (by) return {
+        ok: false,
+        error: "이미 " + by + " 님이 승인했습니다."
+      };
+      o["role" + role + "By"] = String(W.name || "");
+      o["role" + role + "At"] = today();
+      o["sig" + role] = await c.sigIdFor(sigKeyOf(W));
+    }
+    o.status = statusOf(o);
+    await c.put("exp", o);
+    return {
+      ok: true,
+      status: o.status,
+      by: o["role" + role + "By"],
+      at: o["role" + role + "At"],
+      sig: o["sig" + role] || ""
     };
   }
   // ============ 결재 (지출/문서 공용) ============
