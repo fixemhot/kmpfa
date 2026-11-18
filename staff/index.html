@@ -1123,7 +1123,7 @@
       return '<div class="item"><div class="line"><span class="cat" style="background:'+catColor(x.category)+'">'+esc(x.category)+'</span>'+
         '<div class="body" data-prev="'+esc(x.id)+'" style="cursor:pointer"><div class="top"><span class="ttl">'+esc(x.title||x.items||x.vendor||"지출")+'</span><span class="price">'+won(x.amount)+'</span></div>'+
         '<div class="meta">'+meta+'</div><div style="margin-top:5px">'+paper+'</div></div>'+
-        ((isAdmin()||!(r1||r2))?'<div style="display:flex;flex-direction:column;gap:4px"><button class="del" data-edit="'+esc(x.id)+'" style="color:#2C6E9B">수정</button><button class="del" data-del="'+esc(x.id)+'">삭제</button></div>':'')+'</div>'+
+        ((isAdmin()||(!(r1||r2)&&String(x.createdRole||"")!=="admin"))?'<div style="display:flex;flex-direction:column;gap:4px"><button class="del" data-edit="'+esc(x.id)+'" style="color:#2C6E9B">수정</button><button class="del" data-del="'+esc(x.id)+'">삭제</button></div>':'')+'</div>'+
         '<div class="foot"><span>'+badge+'</span><span style="font-size:12px">'+c1+' · '+c2+'</span></div>'+
         (isAdmin()?'<div style="display:flex;gap:8px;margin-top:8px">'+b1+b2+'</div>':offApprHtml(x))+'</div>';
     }).join("");
