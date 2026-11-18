@@ -877,6 +877,8 @@ async function dataFor(c, who) {
   }
   if (who.role === "manager") {
     const own = (x)=>String(x.site) === String(who.site) && String(x.createdRole) === "manager";
+    // (11/18) 지출은 사무국(관리자)이 올린 것도 임원·감사가 보고 결재할 수 있게 함
+    const ownExp = (x)=>String(x.site) === String(who.site) && (String(x.createdRole) === "manager" || String(x.createdRole) === "admin");
     return {
       ok: true,
       role: "manager",
@@ -884,7 +886,7 @@ async function dataFor(c, who) {
       site: who.site,
       role1: cfg.role1,
       role2: cfg.role2,
-      expenses: (await c.rows("exp")).filter(own),
+      expenses: (await c.rows("exp")).filter(ownExp),
       docs: (await c.rows("doc")).filter(own),
       notices: await myNotices(c, who),
       roster: await rosterOf(c, who.site),
@@ -966,7 +968,7 @@ async function notifyFor(c, who) {
   if (who.role === "manager" && who.emp) {
     const k = isAuditorRole(who.emp.role) ? 2 : 1;
     (await c.rows("exp")).forEach((x)=>{
-      if (String(x.site) !== String(who.site) || String(x.createdRole) !== "manager") return;
+      if (String(x.site) !== String(who.site) || (String(x.createdRole) !== "manager" && String(x.createdRole) !== "admin")) return;
       if (x["role" + k + "By"] || isExpAuthor(x, who)) return;
       its.push({
         id: "x:" + x.id + ":" + k,
