@@ -724,6 +724,17 @@ async function rosterOf(c, site) {
 async function memberTotalOf(c, site) {
   return (await c.rows("emp")).filter((x)=>String(x.status) !== "퇴사" && String(x.status) !== "입사예정" && String(x.site || DEFAULT_SITE) === String(site)).length;
 }
+// (11/27) 조직도용 회원 구분별 수 (임원 제외, 개인정보 없음)
+async function memberTypesOf(c, site) {
+  const out = { "운영회원": 0, "특별회원": 0, "일반회원": 0 };
+  (await c.rows("emp")).filter((x)=>String(x.status) !== "퇴사" && String(x.status) !== "입사예정" && String(x.site || DEFAULT_SITE) === String(site) && !(OFFICER_RE.test(String(x.role || "")) && !/지부장/.test(String(x.role || "")))).forEach((x)=>{
+    const m = String(x.mtype || "");
+    if (m === "운영회원") out["운영회원"]++;
+    else if (m === "특별회원") out["특별회원"]++;
+    else out["일반회원"]++;
+  });
+  return out;
+}
 // (11/6) 임원별 소개 회원 현황 (임원 화면용: 이름·가입일만, 연락처 없음)
 async function refStatsOf(c) {
   const emps = await c.rows("emp");
@@ -891,6 +902,7 @@ async function dataFor(c, who) {
       notices: await myNotices(c, who),
       roster: await rosterOf(c, who.site),
       memberTotal: await memberTotalOf(c, who.site),
+      memberTypes: await memberTypesOf(c, who.site),
       supplyTemplate: await supplyTemplate(c, who.site),
       meId: who.emp ? who.id : "",
       meRole: who.emp ? String(who.emp.role || "") : "",
@@ -928,6 +940,7 @@ async function dataFor(c, who) {
     notices: await myNotices(c, who),
     roster: await rosterOf(c, who.site),
     memberTotal: await memberTotalOf(c, who.site),
+    memberTypes: await memberTypesOf(c, who.site),
     payslips: await myPayslips(c, me.id),
     mySigs: await mySigs(c, who),
     myDocs: (await c.rows("doc")).filter((x)=>String(x.createdKey) === "emp:" + me.id).sort((a, b)=>String(a.date) < String(b.date) ? 1 : -1),
