@@ -726,12 +726,12 @@ async function memberTotalOf(c, site) {
 }
 // (11/27) 조직도용 회원 구분별 수 (임원 제외, 개인정보 없음)
 async function memberTypesOf(c, site) {
-  const out = { "운영회원": 0, "특별회원": 0, "일반회원": 0 };
+  const out = { "특별운영회원": 0, "일반운영회원": 0, "일반회원": 0 };
   (await c.rows("emp")).filter((x)=>String(x.status) !== "퇴사" && String(x.status) !== "입사예정" && String(x.site || DEFAULT_SITE) === String(site) && !(OFFICER_RE.test(String(x.role || "")) && !/지부장/.test(String(x.role || "")))).forEach((x)=>{
     const m = String(x.mtype || "");
-    if (m === "운영회원") out["운영회원"]++;
-    else if (m === "특별회원") out["특별회원"]++;
-    else out["일반회원"]++;
+    if (m === "특별운영회원") out["특별운영회원"]++;
+    else if (m === "일반운영회원" || m === "운영회원") out["일반운영회원"]++;
+    else out["일반회원"]++; // (11/27) 특별회원 폐지: 남아 있는 특별회원은 일반회원으로 셈
   });
   return out;
 }
