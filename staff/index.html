@@ -441,7 +441,7 @@
   .ko .kg .kem{font-size:10.5px;}
   .ko .kms3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
   .ko .km{background:#fff;border:1px solid #E2DCD0;border-radius:8px;padding:7px 4px;}
-  .ko .kmt{font-size:13px;font-weight:800;}
+  .ko .kmt{font-size:12.5px;font-weight:800;word-break:keep-all;}
   .ko .kms{font-size:10px;color:#8A8278;margin:2px 0 3px;}
   .ko .kmn{font-size:15px;font-weight:800;color:#7A6247;}
   .lib-cat{font-size:13px;font-weight:800;color:#FFFFFF;background:#7A6247;border-radius:8px;padding:6px 10px;margin:22px 0 4px;}
@@ -2070,11 +2070,12 @@
     brs.forEach(function(x){var t=R(x)+" "+String(x.team||"");for(var i=0;i<REG.length;i++){if(REG[i][1].test(t)){(brOf[REG[i][0]]=brOf[REG[i][0]]||[]).push(x);return;}}});
     // 회원 수: 서버가 보낸 구분별 수(mTypes)가 있으면 그것, 없으면 명부로 계산
     var offN=act.filter(isOff).length,cnt;
-    if(mTypes&&typeof mTypes==="object"){cnt={op:+mTypes["운영회원"]||0,sp:+mTypes["특별회원"]||0,gen:+mTypes["일반회원"]||0};}
+    // (11/27) 특별회원 폐지 → 특별운영회원·일반운영회원·일반회원 (예전 "운영회원"은 일반운영회원으로 셈)
+    if(mTypes&&typeof mTypes==="object"){cnt={sop:+mTypes["특별운영회원"]||0,op:(+mTypes["일반운영회원"]||0)+(+mTypes["운영회원"]||0)};cnt.gen=(+mTypes["일반회원"]||0)+(+mTypes["특별회원"]||0);}
     else{
       var mem=act.filter(function(x){return !isOff(x);});
-      cnt={op:mem.filter(function(x){return x.mtype==="운영회원";}).length,sp:mem.filter(function(x){return x.mtype==="특별회원";}).length};
-      cnt.gen=Math.max(0,(orgTotal?orgTotal-offN:mem.length)-cnt.op-cnt.sp);
+      cnt={sop:mem.filter(function(x){return x.mtype==="특별운영회원";}).length,op:mem.filter(function(x){return x.mtype==="일반운영회원"||x.mtype==="운영회원";}).length};
+      cnt.gen=Math.max(0,(orgTotal?orgTotal-offN:mem.length)-cnt.sop-cnt.op);
     }
     var total=orgTotal||act.length;
     var regHtml=REG.map(function(r){var ps=brOf[r[0]]||[];return '<div class="kg"><div class="kgn">'+r[0]+'지부</div>'+(ps.length?ps.map(function(x){return chip(x);}).join(""):'<span class="kem">임명 전</span>')+'</div>';}).join("");
@@ -2089,10 +2090,10 @@
       +'<div class="kv"></div>'
       +'<div class="kcol"><div class="kb sec"><div class="kr">최종 관리자</div><div class="kps">'+secs.map(function(x){return chip(x,"사무국장");}).join("")+(secs.length?"":'<span class="kem">미정</span>')+'</div><div class="kd">회원앱 전체 관리</div></div></div>'
       +'<div class="kv"></div><div class="kvlab">시·도별 지부</div><div class="kv"></div>'
-      +'<div class="kb br"><div class="kr">지부장 <small>시·도별 1명 · 이사회 임명</small></div><div class="kgs">'+regHtml+'</div></div>'
+      +'<div class="kb br"><div class="kr">지부장 <small>시·도별 1명 · 이사회 임명 · 가입비 400만 원</small></div><div class="kgs">'+regHtml+'</div></div>'
       +'<div class="kv"></div>'
       +'<div class="kb gen"><div class="kr">회원</div><div class="kms3">'
-        +mcell("운영회원","화장차 운영 업체",cnt.op,"곳")+mcell("특별회원","활동 참여 개인",cnt.sp,"명")+mcell("일반회원","보호자·소비자",cnt.gen,"명")
+        +mcell("특별운영회원","가입비 250만 원",cnt.sop,"곳")+mcell("일반운영회원","화장차 운영 업체",cnt.op,"곳")+mcell("일반회원","보호자·소비자",cnt.gen,"명")
       +'</div><div class="kd">재적 '+total+'명 (임원 '+offN+'명, 사무국장 포함)</div></div>'
       +'</div>';
   }
@@ -2285,7 +2286,7 @@
       +((x&&(x.attachments||[]).length)?'<div style="font-size:12px;color:#6B645A;margin-top:6px">이미 저장된 사진: '+(x.attachments||[]).map(function(a){return esc(a.name);}).join(", ")+'</div>':'')
       +'<input type="file" id="rc_camin" accept="image/*" capture="environment" style="display:none"><input type="file" id="rc_file" accept="image/*,application/pdf,.pdf,.docx,.hwp,.hwpx,.doc,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/x-hwp,application/haansofthwp" multiple style="display:none"></div>'
       +'<div class="row2"><div class="field"><label>성명 *</label><input type="text" id="rc_name" value="'+v("name")+'" placeholder="홍길동"></div>'
-      +'<div class="field"><label>회원 구분</label><select id="rc_mtype">'+["일반회원","특별회원","운영회원","임원(후보)"].map(function(o){return '<option'+(o===mt?' selected':'')+'>'+o+'</option>';}).join("")+'</select></div></div>'
+      +'<div class="field"><label>회원 구분</label><select id="rc_mtype">'+(mt==="특별회원"||mt==="운영회원"?[mt]:[]).concat(["일반회원","특별운영회원","일반운영회원","임원(후보)"]).map(function(o){return '<option'+(o===mt?' selected':'')+'>'+o+'</option>';}).join("")+'</select></div></div>'
       +'<div class="row2"><div class="field"><label>생년월일 6자리</label><input type="text" id="rc_birth" inputmode="numeric" maxlength="6" value="'+v("birth")+'" placeholder="671030"></div>'
       +'<div class="field"><label>성별</label><select id="rc_gender"><option'+(x&&x.gender==="남"?' selected':'')+'>남</option><option'+(!x||x.gender!=="남"?' selected':'')+'>여</option></select></div></div>'
       +'<div class="field"><label>휴대전화 <small style="color:#868C94;font-weight:400">(로그인 비밀번호 뒷자리 4자리)</small></label><input type="tel" id="rc_phone" value="'+v("phone")+'" placeholder="010-0000-0000"></div>'
